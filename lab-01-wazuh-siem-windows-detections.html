@@ -389,6 +389,12 @@ ol.step-list pre.code{ margin:10px 0 2px; }
   ol.step-list > li::before{ left:12px; top:12px; width:26px; height:26px; }
 }
 
+/* ===== Snapshot checkpoint callouts ===== */
+.callout.snap{ background:#1b2f27; border-left-color:var(--green); color:#cfe9d9; }
+.callout.snap b{ color:#eaf7ef; }
+.callout.snap .term{ background:#24463a; color:#b9f0cf; }
+.callout.snap .snap-link{ color:#81c995; font-size:12.5px; white-space:nowrap; margin-left:4px; }
+
 </style>
 </head>
 <body>
@@ -553,8 +559,10 @@ ol.step-list pre.code{ margin:10px 0 2px; }
       <div class="si-divider"><button class="si-toggle" data-target="si-overview" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
       <div class="si-panel" id="si-overview">
         <span class="si-label">සිංහල පරිවර්තනය</span>
-        <p class="si">මෙම පරීක්ෂණාගාර (Lab) පාඩමෙන් ඔබ VirtualBox තුළ Wazuh SIEM පද්ධතියක් ගොඩනඟා, Windows 11 victim VM එකක් එයට සම්බන්ධ කර, සැබෑ ආරක්ෂක සිදුවීම් (security events) ජනනය කර, ඒවා විමර්ශනය කර, MITRE ATT&amp;CK සමග ගැලපෙන ඔබේම හඳුනාගැනීමේ රීති (detection rules) ලියනු ඇත.</p>
-        <p class="si"><b>අවසානයේ ලැබෙන දේ:</b> වැඩ කරන SIEM එකක්, ලියූ රීති හතරක්, සහ ඔබේ වෙබ් අඩවියට දැමිය හැකි පරීක්ෂණ සටහනක්.</p>
+        
+        <p class="si"><b>SIEM සහ Wazuh:</b> SIEM (Security Information and Event Management) යනු බොහෝ පරිගණකවල ලොග් එක තැනකට එකතු කර, detection rules මගින් විශ්ලේෂණය කර අනතුරු ඇඟවීම් (alerts) ලබා දෙන පද්ධතියකි. Wazuh යනු මේ සඳහා නොමිලේ ලබා ගත හැකි open-source මෙවලමක් වන අතර ගොනු වෙනස්වීම් නිරීක්ෂණය (file integrity monitoring) වැනි endpoint විශේෂාංගද සපයයි. මෙම lab එකේදී ඔබ තනි-node Wazuh එකක් ගොඩනඟා, Windows 11 endpoint එකක් එයට සම්බන්ධ කර, බොහෝ tutorials මඟහරින කොටස වන ඔබේම rules ලියා පරීක්ෂා කරනු ඇත.</p>
+        <p class="si"><b>අවසානයේ ඔබට ලැබෙන දේ:</b> වැඩ කරන Wazuh server එකක් (Windows host එකේ browser එකෙන් විවෘත කළ හැක); "Active" agent එකක් ලෙස සම්බන්ධ වූ Win-Victim; dashboard හි විමර්ශනය කළ සැබෑ සිදුවීම් හතරක් (අසාර්ථක පිවිසුම්, නව පරිශීලක, admin කණ්ඩායම වෙනස් කිරීම, ලොගය මකා දැමීම); C:\LabWatch හි file integrity monitoring; MITRE ATT&amp;CK සහ NIST CSF DETECT ට සිතියම්ගත ඔබේම rules හතරක්; සහ වෙබ් අඩවියට දැමිය හැකි lab සටහනක්.</p>
+        <p class="si"><b>ගෘහ නිර්මාණය:</b> සියලුම VM හුදකලා SOC-Lab-Net අභ්‍යන්තර ජාලයේ ඇති බැවින් ප්‍රහාර-ආකාර ක්‍රියාකාරකම් ඔබේ ගෘහ ජාලයට නොපැමිණේ. NAT භාවිත වන්නේ ස්ථාපක සහ යාවත්කාලීන බාගැනීමට පමණි. Dashboard එකට ඔබේ පරිගණකයෙන් පිවිසෙන්නේ 8443 → 443 port-forward එක හරහා ය.</p>
       </div>
     </section>
 
@@ -587,7 +595,51 @@ ol.step-list pre.code{ margin:10px 0 2px; }
         <li><span class="chk"></span><span><b>Time:</b> allow 3–4 hours, or split it across two sessions (stop after Step 3).</span></li>
       </ul>
 
+      <div class="subhead" id="snapshots"><span class="sub-dot" style="background:var(--green)"></span>Snapshot plan for this lab (7 checkpoints)</div>
+      <p>A <b>snapshot</b> saves a VM exactly as it is, so you can return to it if something breaks. This guide marks every checkpoint with a green <b>📌 Snapshot checkpoint</b> box. Here they all are in one place:</p>
+      <div class="table-wrap"><table class="ctable">
+        <thead><tr><th>When</th><th>VM</th><th>Snapshot name</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td class="row-head">End of Step 2</td><td>Wazuh-Server</td><td><span class="term">01-Ubuntu-Base</span></td><td>Clean OS with network and updates; return here if the Wazuh install fails</td></tr>
+          <tr><td class="row-head">Step 3, after the dashboard login works</td><td>Wazuh-Server</td><td><span class="term">02-Wazuh-Installed</span></td><td>Known-good SIEM; every later lab starts here</td></tr>
+          <tr><td class="row-head">Start of Step 4</td><td>Win-Victim</td><td><span class="term">02-Pre-Wazuh</span></td><td>Windows before any lab change (your <span class="term">01-Clean-Base</span> stays untouched)</td></tr>
+          <tr><td class="row-head">End of Step 4</td><td>Win-Victim</td><td><span class="term">03-Agent-Enrolled</span></td><td>Agent working; also your restore point to repeat Step 5</td></tr>
+          <tr><td class="row-head">Start of Step 6</td><td>Win-Victim</td><td><span class="term">04-Before-FIM</span></td><td>Before editing the agent's config file</td></tr>
+          <tr><td class="row-head">Start of Step 7</td><td>Wazuh-Server</td><td><span class="term">03-Before-Custom-Rules</span></td><td>A bad rules file can stop the manager; this undoes it</td></tr>
+          <tr><td class="row-head">End of Step 7</td><td>Wazuh-Server <i>and</i> Win-Victim</td><td><span class="term">04-Custom-Rules-Done</span> · <span class="term">05-Lab01-Complete</span></td><td>Finished lab; Lab 02 builds on these</td></tr>
+        </tbody>
+      </table></div>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--blue)"></span>How to take, restore and delete a snapshot</div>
+      <ol class="step-list">
+        <li><b>Shut the VM down first.</b> A snapshot of a powered-off VM stores only the disk and stays small. A snapshot of a running VM also saves its memory (about 4 GB for each of your VMs). Linux: <span class="term">sudo poweroff</span>. Windows: Start → Power → Shut down.</li>
+        <li><b>Take it.</b> In the VirtualBox Manager window, click the VM, open its <b>Snapshots</b> view (toolbar), then click <b>Take</b>. Type the exact name from the table and click OK. A new line appears in the snapshot list.</li>
+        <li><b>Start the VM again</b> and carry on with the lab.</li>
+        <li><b>Restore (undo).</b> Shut the VM down, open <b>Snapshots</b>, select the snapshot, click <b>Restore</b>. This <b>throws away everything done after that snapshot</b>. VirtualBox offers to save the current state first; untick that unless you want to keep it.</li>
+        <li><b>Delete</b> a snapshot you no longer need: select it and click <b>Delete</b>. This is safe (it merges the data into the next snapshot) but needs some free disk space while it runs.</li>
+      </ol>
+      <p>The same thing from PowerShell, if you prefer commands:</p>
+      <pre class="code"><code>$vbm = "C:\Program Files\Oracle\VirtualBox\VBoxManage.exe"
+
+&amp; $vbm snapshot "Wazuh-Server" take "01-Ubuntu-Base"       # take (VM powered off)
+&amp; $vbm snapshot "Wazuh-Server" list                         # list snapshots
+&amp; $vbm snapshot "Wazuh-Server" restore "01-Ubuntu-Base"    # restore (VM powered off)
+&amp; $vbm snapshot "Wazuh-Server" delete "01-Ubuntu-Base"     # delete</code></pre>
+      <div class="callout warn"><b>Restore in matching pairs.</b> Wazuh-Server remembers which agents are enrolled. If you restore Wazuh-Server to <span class="term">02-Wazuh-Installed</span> (taken before Win-Victim enrolled), also restore Win-Victim to <span class="term">02-Pre-Wazuh</span> and redo Step 4. Restoring <i>only</i> Win-Victim to <span class="term">03-Agent-Enrolled</span> or <span class="term">04-Before-FIM</span>, or only Wazuh-Server to <span class="term">03-Before-Custom-Rules</span>, is safe.</div>
+
+      <div class="callout warn">Snapshots are an undo button, not a backup: they live on the same disk as the VM. Each one grows as you keep working, so delete the ones you no longer need once a lab is finished. Keep at least 10 GB free on D:.</div>
+
       <div class="callout">pfSense is <b>not needed</b> in Lab 01. Both VMs use static addresses on SOC-Lab-Net, so nothing depends on pfSense's DHCP. It joins in Lab 02.</div>
+
+      <div class="si-divider"><button class="si-toggle" data-target="si-design" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-design">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        
+        <p class="si"><b>භාවිත වන VM:</b> මෙම lab එකේදී VM දෙකක් පමණක් ක්‍රියාත්මක වේ: Wazuh-Server (නව VM — RAM 4 GB, තැටිය 30 GB, IP 192.168.1.20) සහ Win-Victim (RAM 4 GB, IP 192.168.1.30). pfSense, Kali, Ubuntu-Server-Lab සහ LinuxPlus VM ක්‍රියා විරහිතව තබන්න. මෙම lab එකට pfSense අවශ්‍ය නැත.</p>
+        <p class="si"><b>වැදගත් වෙනසක්:</b> ඔබේ පවතින Ubuntu-Server-Lab හි ඇත්තේ Ubuntu 25.04 ය. එහි සහාය 2026 ජනවාරියේ අවසන් වූ අතර Wazuh ස්ථාපකය නිල වශයෙන් සහාය දක්වන්නේ Ubuntu 24.04 දක්වා පමණි. එබැවින් Ubuntu Server 24.04 LTS සහිත නව VM එකක් සාදන්න; Ubuntu-Server-Lab එලෙසම තබන්න.</p>
+        <p class="si"><b>ආරම්භයට පෙර:</b> RAM: VM දෙක 8 GB භාවිත කරයි; Windows සහ browser සඳහා 4–5 GB ඉතිරි කරන්න (laptop එකේ භාවිත කළ හැකි RAM 15.7 GB). තැටිය: Wazuh-Server VM සෑදූ පසු D: හි අවම 10 GB ඉතිරි කරන්න. Ubuntu Server 24.04 ISO (≈3 GB) බාගන්න. කාලය පැය 3–4 කි; අවශ්‍ය නම් 3 වන පියවරෙන් පසු නවතා දෙවන වාරයක කරන්න.</p>
+        <p class="si"><b>Snapshot සැලැස්ම:</b> කොළ පැහැති 📌 Snapshot checkpoint කොටු 7ක් (snapshots 8ක්) සෑම අවදානම් පියවරකටම පෙර/පසු ලකුණු කර ඇත. Snapshot ගැනීමට පෙර VM එක shut down කරන්න — ක්‍රියාත්මක VM එකක snapshot එක memory ද සුරකින නිසා ≈4 GB වැඩි වේ. Snapshots → Take ඔබා නම ටයිප් කරන්න. Restore මගින් එම snapshot එකෙන් පසු කළ සියල්ල මකා දමයි. Wazuh-Server 02-Wazuh-Installed වෙත restore කළහොත් Win-Victim ද 02-Pre-Wazuh වෙත restore කර 4 වන පියවර නැවත කරන්න. Snapshots යනු backup නොවේ — අනවශ්‍ය ඒවා මකා තැටි ඉඩ සුරකින්න.</p>
+      </div>
     </section>
 
     <!-- ================= 3. VM ================= -->
@@ -618,7 +670,11 @@ ol.step-list pre.code{ margin:10px 0 2px; }
       <div class="si-divider"><button class="si-toggle" data-target="si-vm" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
       <div class="si-panel" id="si-vm">
         <span class="si-label">සිංහල පරිවර්තනය</span>
-        <p class="si">Wazuh සඳහා නව Ubuntu Server 24.04 LTS VM එකක් (Wazuh-Server) සාදන්න: RAM 4 GB, CPU 2ක්, තැටිය 30 GB. Adapter 1 NAT ලෙසත් (අන්තර්ජාලය සඳහා), Adapter 2 SOC-Lab-Net ලෙසත් (ලැබ් ජාලය සඳහා) සකසන්න. NAT හි Port Forwarding රීති දෙකක් එක් කරන්න — 2222 → 22 සහ 8443 → 443.</p>
+        
+        <p class="si">VirtualBox හි නව VM එකක් සාදන්න: නම Wazuh-Server; ෆෝල්ඩරය D:\04_Personal_and_System\16_Virtual_Machines\SOC_Lab\Wazuh\Wazuh-Server; වර්ගය Linux / Ubuntu (64-bit); "Skip Unattended Installation" තෝරන්න.</p>
+        <p class="si"><b>දෘඩාංග:</b> RAM 4096 MB, CPU 2, තැටිය 30 GB (VDI, dynamically allocated — "Pre-allocate" තෝරන්න එපා).</p>
+        <p class="si"><b>ජාලය:</b> Adapter 1: NAT (Intel PRO/1000 MT Desktop) සහ Port Forwarding රීති දෙකක් (Host IP 127.0.0.1) — ssh 2222 → 22 සහ dashboard 8443 → 443. Adapter 2: Internal Network, නම හරියටම SOC-Lab-Net (ලොකු/කුඩා අකුරු වැදගත්; අනෙක් VM සමග නොගැළපුවහොත් VM එකිනෙකා නොදකී).</p>
+        <p class="si"><b>අවසාන පියවර:</b> Storage හි Ubuntu Server ISO එක සම්බන්ධ කර VM එක ආරම්භ කරන්න.</p>
       </div>
     </section>
 
@@ -671,12 +727,15 @@ timedatectl        # look for: System clock synchronized: yes
 hostnamectl</code></pre>
       <p>From now on use PowerShell on your Windows host to connect, which lets you copy and paste commands:</p>
       <pre class="code"><code>ssh -p 2222 YOUR_USERNAME@127.0.0.1</code></pre>
-      <div class="callout">Take snapshot <b>01-Ubuntu-Base</b> now (VM Machine → Take Snapshot). If anything goes wrong in Step 3 you can return here in seconds.</div>
+      <div class="callout snap"><b>📌 Snapshot checkpoint — take <span class="term">01-Ubuntu-Base</span> on Wazuh-Server now.</b> Run <span class="term">sudo poweroff</span>, take the snapshot, then start the VM again. This is a clean Ubuntu with your network and updates in place. If the Wazuh installer fails in Step 3, restore this snapshot and try again. <a class="snap-link" href="#snapshots">How to take a snapshot ↑</a></div>
 
       <div class="si-divider"><button class="si-toggle" data-target="si-ubuntu" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
       <div class="si-panel" id="si-ubuntu">
         <span class="si-label">සිංහල පරිවර්තනය</span>
-        <p class="si">Ubuntu ස්ථාපනය කිරීමේදී LVM අක්‍රිය කර සම්පූර්ණ තැටිය භාවිත කරන්න. ඉන්පසු netplan හරහා Wazuh-Server හි ලැබ් IP ලිපිනය 192.168.1.20 ලෙස ස්ථිරව (static) සකසන්න. NAT ඇඩැප්ටරය අන්තර්ජාලය සඳහා පමණක් භාවිත වේ. අවසානයේ 01-Ubuntu-Base snapshot එකක් ගන්න.</p>
+        
+        <p class="si"><b>ස්ථාපකයේ තේරීම්:</b> Ubuntu Server (minimized නොවේ). Storage: "Use an entire disk" තෝරා "Set up this disk as an LVM group" ටික් ඉවත් කරන්න — පෙරනිමි LVM සැලැස්ම root volume එක තැටියෙන් අඩක් පමණ ලෙස තැබිය හැකි අතර Wazuh ට ඉඩ අවශ්‍යයි. Server name wazuh-server; ශක්තිමත් මුරපදයක් භාවිත කරන්න; OpenSSH server ස්ථාපනය කරන්න; snaps තෝරන්න එපා.</p>
+        <p class="si"><b>Static IP:</b> ip -br a මගින් interface නම් බලන්න (enp0s3 = NAT, enp0s8 = internal). cloud-init හි network වෙනස් කිරීම අක්‍රිය කර netplan ගොනුවේ enp0s8 ට 192.168.1.20/24 ලබා දෙන්න — gateway නොදෙන්න, එවිට NAT අන්තර්ජාලය සඳහා default route ලෙස පවතී. sudo netplan apply කර ping ubuntu.com මගින් අන්තර්ජාලය පරීක්ෂා කරන්න.</p>
+        <p class="si"><b>යාවත්කාලීන සහ SSH:</b> sudo apt update &amp;&amp; sudo apt -y full-upgrade, reboot, සහ timedatectl මගින් clock synchronized බව බලන්න. ඉන්පසු Windows PowerShell හි ssh -p 2222 USER@127.0.0.1 මගින් සම්බන්ධ වන්න (විධාන copy-paste කළ හැක). අවසානයේ sudo poweroff කර 01-Ubuntu-Base snapshot එක ගන්න.</p>
       </div>
     </section>
     <!-- ================= 5. WAZUH ================= -->
@@ -685,6 +744,8 @@ hostnamectl</code></pre>
         <div class="kicker-left"><div class="num-badge" style="background:var(--red)">5</div><h2>Step 3 — Install Wazuh all-in-one</h2></div>
       </div>
       <p class="lede">The Wazuh installation assistant installs the manager, indexer, dashboard and Filebeat on one machine. This lab uses the 4.14 stable line.</p>
+
+      <div class="callout snap"><b>📌 Restore point: <span class="term">01-Ubuntu-Base</span>.</b> You took this at the end of Step 2. If the installer below stops halfway or leaves a broken install, power the VM off, restore this snapshot, and run the installer again from a clean system.</div>
 
       <div class="subhead"><span class="sub-dot" style="background:var(--yellow)"></span>Pre-checks</div>
       <pre class="code"><code>free -h
@@ -706,6 +767,8 @@ sudo tar -O -xvf wazuh-install-files.tar wazuh-install-files/wazuh-passwords.txt
 
       <div class="shot"><b>📸 Screenshot to add:</b> the Wazuh dashboard home page after login (hide anything personal).</div>
 
+      <div class="callout snap"><b>📌 Snapshot checkpoint — take <span class="term">02-Wazuh-Installed</span> on Wazuh-Server now.</b> Do this once you can log in to the dashboard, <i>before</i> the optional tuning below, so you can undo it. Run <span class="term">sudo poweroff</span>, take the snapshot, start the VM again. This is your known-good SIEM, and every later lab starts from it. <a class="snap-link" href="#snapshots">How ↑</a></div>
+
       <div class="subhead"><span class="sub-dot" style="background:var(--blue)"></span>Optional: lighten the load and prevent surprise upgrades</div>
       <pre class="code"><code># stop accidental upgrades of Wazuh packages
 sudo sed -i 's/^deb/#deb/' /etc/apt/sources.list.d/wazuh.list
@@ -723,12 +786,14 @@ sudo systemctl restart wazuh-indexer</code></pre>
         <tr><td class="row-head">55000/TCP</td><td>Wazuh server API</td></tr>
         <tr><td class="row-head">9200/TCP</td><td>Wazuh indexer</td></tr>
       </tbody></table></div>
-      <div class="callout">Take snapshot <b>02-Wazuh-Installed</b>. This is your known-good SIEM baseline for every later lab.</div>
-
       <div class="si-divider"><button class="si-toggle" data-target="si-wazuh" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
       <div class="si-panel" id="si-wazuh">
         <span class="si-label">සිංහල පරිවර්තනය</span>
-        <p class="si">Wazuh ස්ථාපන සහායකය (installation assistant) ධාවනය කළ විට Wazuh manager, indexer සහ dashboard යන සියල්ල එකම VM එකේ ස්ථාපනය වේ. අවසානයේ පෙන්වන admin මුරපදය ආරක්ෂිතව සටහන් කරගන්න. ඉන්පසු ඔබේ Windows පරිගණකයේ බ්‍රවුසරයෙන් https://127.0.0.1:8443 වෙත පිවිසෙන්න. 02-Wazuh-Installed snapshot එකක් ගන්න.</p>
+        
+        <p class="si"><b>පෙර පරීක්ෂා:</b> free -h, df -h /, nproc ධාවනය කරන්න — RAM ≈ 4 GB සහ / හි අවම 15 GB ඉඩ තිබිය යුතුය. root එක ≈15 GB පමණක් නම් විසඳුම (lvextend) Troubleshooting හි ඇත.</p>
+        <p class="si"><b>ස්ථාපනය:</b> curl මගින් wazuh-install.sh බාගෙන sudo bash ./wazuh-install.sh -a ධාවනය කරන්න (මිනිත්තු 10–20). අවසානයේ පෙන්වන admin මුරපදය වහාම password manager එකක සුරකින්න; පසුව බැලීමට wazuh-install-files.tar තුළ wazuh-passwords.txt ඇත. Hardware check එකෙන් නතර වුවහොත් -i සමග නැවත ධාවනය කළ හැකි නමුත් වේගය අඩු වේ.</p>
+        <p class="si"><b>තහවුරු කිරීම:</b> systemctl is-active මගින් wazuh-manager, wazuh-indexer, wazuh-dashboard සහ filebeat සියල්ල active බව බලන්න. ඉන්පසු Windows browser හි https://127.0.0.1:8443 විවෘත කර (self-signed certificate අනතුරු ඇඟවීම පිළිගෙන) admin ලෙස පිවිසෙන්න. පිවිසුම සාර්ථක වූ පසු, optional tuning ට පෙර 02-Wazuh-Installed snapshot එක ගන්න.</p>
+        <p class="si"><b>Optional සහ ports:</b> අහම්බෙන් Wazuh package upgrade නොවීමට wazuh.list repo අක්‍රිය කරන්න (manager, indexer, dashboard එකම version එකේ තිබිය යුතුය). VM මන්දගාමී නම් jvm.options හි -Xms සහ -Xmx 1g ලෙස සකසන්න. වැදගත් ports: 443 dashboard, 1514 agent events, 1515 enrollment, 55000 API, 9200 indexer.</p>
       </div>
     </section>
 
@@ -739,8 +804,9 @@ sudo systemctl restart wazuh-indexer</code></pre>
       </div>
       <p class="lede">The Wazuh agent runs on the Windows machine, reads its event logs and file changes, and ships them to the manager. Keep both VMs powered on for this step.</p>
 
+      <div class="callout snap"><b>📌 Snapshot checkpoint — take <span class="term">02-Pre-Wazuh</span> on Win-Victim <u>before you do anything below</u>.</b> Start Win-Victim, make sure Windows boots and you can sign in, then shut it down (Start → Power → Shut down), take the snapshot, and start it again. Your older <span class="term">01-Clean-Base</span> stays untouched. If a step goes wrong, restore this snapshot. <a class="snap-link" href="#snapshots">How ↑</a></div>
+
       <ol class="step-list">
-        <li><b>Snapshot first.</b> Power on Win-Victim, sign in, then take snapshot <span class="term">02-Pre-Wazuh</span> (your existing 01-Clean-Base stays untouched).</li>
         <li><b>Set a static IP</b> on the adapter attached to SOC-Lab-Net (the first adapter, MAC ending 2863): Settings → Network &amp; internet → Ethernet → IP assignment → Edit → Manual → IPv4. IP <span class="term">192.168.1.30</span>, subnet mask <span class="term">255.255.255.0</span>, leave gateway and DNS empty. The NAT adapter keeps providing internet.</li>
         <li><b>Test connectivity</b> from an elevated PowerShell on Win-Victim. Both ports must report <span class="term">TcpTestSucceeded : True</span>:
           <pre class="code"><code>Test-NetConnection 192.168.1.20 -Port 1515
@@ -757,6 +823,8 @@ NET START WazuhSvc</code></pre>
       </ol>
 
       <div class="shot"><b>📸 Screenshot to add:</b> the Agents page showing Win-Victim Active, with its IP and OS.</div>
+
+      <div class="callout snap"><b>📌 Snapshot checkpoint — take <span class="term">03-Agent-Enrolled</span> on Win-Victim now.</b> The agent works and is reporting. Shut Win-Victim down, take the snapshot, start it again. You will also use this as your <b>restore point for Step 5</b>, because those commands clear the Security log and create a user. <a class="snap-link" href="#snapshots">How ↑</a></div>
       <div class="callout warn">The agent version must not be newer than the manager. Always use the install command from the dashboard wizard instead of an older command from a video or blog.</div>
 
       <div class="subhead"><span class="sub-dot" style="background:var(--blue)"></span>If the agent does not connect</div>
@@ -767,7 +835,11 @@ Get-Content "C:\Program Files (x86)\ossec-agent\ossec.log" -Tail 20</code></pre>
       <div class="si-divider"><button class="si-toggle" data-target="si-agent" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
       <div class="si-panel" id="si-agent">
         <span class="si-label">සිංහල පරිවර්තනය</span>
-        <p class="si">Win-Victim හි static IP 192.168.1.30 ලබා දී, Wazuh dashboard හි "Deploy new agent" මඟපෙන්වීම භාවිතයෙන් agent එක ස්ථාපනය කරන්න. Agents ලැයිස්තුවේ Win-Victim "Active" ලෙස පෙනෙන්නේ නම් සම්බන්ධතාවය සාර්ථකය.</p>
+        
+        <p class="si"><b>Agent යනු:</b> Windows යන්ත්‍රයේ ධාවනය වී එහි event logs සහ ගොනු වෙනස්වීම් manager වෙත යවන කුඩා මෘදුකාංගයයි. මුලින්ම Win-Victim හි 02-Pre-Wazuh snapshot එක ගන්න.</p>
+        <p class="si"><b>Static IP සහ පරීක්ෂාව:</b> Settings → Network &amp; internet → Ethernet හි SOC-Lab-Net adapter එකට static IP 192.168.1.30, subnet mask 255.255.255.0 ලබා දෙන්න (gateway සහ DNS හිස් තබන්න). elevated PowerShell හි Test-NetConnection 192.168.1.20 -Port 1515 සහ -Port 1514 දෙකම TcpTestSucceeded : True විය යුතුය.</p>
+        <p class="si"><b>Agent ස්ථාපනය:</b> Dashboard හි Agents → Deploy new agent මගින් Windows/MSI, server address 192.168.1.20, agent name Win-Victim ලබා දී ජනනය වන PowerShell විධාන copy කර elevated PowerShell හි ධාවනය කරන්න. Version එක wizard විසින් පුරවයි — පැරණි blog/video විධාන භාවිත නොකරන්න (agent version manager ට වඩා අලුත් නොවිය යුතුය).</p>
+        <p class="si"><b>තහවුරු කිරීම:</b> Agents ලැයිස්තුවේ Win-Victim "Active" වුවහොත් 03-Agent-Enrolled snapshot එක ගන්න. සම්බන්ධ නොවේ නම් Get-Service WazuhSvc සහ ossec.log අවසාන පේළි බලන්න; තවත් හේතු Troubleshooting හි ඇත.</p>
       </div>
     </section>
 
@@ -777,6 +849,8 @@ Get-Content "C:\Program Files (x86)\ossec-agent\ossec.log" -Tail 20</code></pre>
         <div class="kicker-left"><div class="num-badge" style="background:var(--green)">7</div><h2>Step 5 — Generate events &amp; investigate</h2></div>
       </div>
       <p class="lede">Windows already logs the events below by default, and the Wazuh agent already collects the Security log. You only need to cause the activity. Run these in an <b>elevated PowerShell on Win-Victim</b>. They are harmless in this isolated lab VM.</p>
+
+      <div class="callout snap"><b>📌 Restore point: <span class="term">03-Agent-Enrolled</span> (Win-Victim).</b> These commands create a user, change group membership and <b>clear the Security log</b>. They are safe in this lab VM, but if you want to repeat the exercise from scratch (for example to test your rules again in Step 7), shut Win-Victim down and restore this snapshot. No new snapshot is needed in this step.</div>
 
       <pre class="code"><code># 1) Six failed logons for a user that does not exist (event 4625)
 1..6 | ForEach-Object { net use \\localhost\IPC$ /user:labfake "BadPass$_" 2&gt;$null }
@@ -818,7 +892,10 @@ wevtutil cl Security</code></pre>
       <div class="si-divider"><button class="si-toggle" data-target="si-events" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
       <div class="si-panel" id="si-events">
         <span class="si-label">සිංහල පරිවර්තනය</span>
-        <p class="si">PowerShell හරහා අසාර්ථක පිවිසුම් (event 4625), නව පරිශීලක නිර්මාණය (4720), Administrators කණ්ඩායමට එක් කිරීම (4732) සහ Security ලොගය මකා දැමීම (1102) ජනනය කරන්න. ඉන්පසු dashboard හි ඒවායේ rule.id සහ level සටහන් කරගන්න — ඊළඟ පියවරට ඒවා අවශ්‍ය වේ.</p>
+        
+        <p class="si"><b>සිදුවීම් ජනනය:</b> Windows දැනටමත් ලොග් කරන සහ Wazuh agent එක දැනටමත් එකතු කරන Security සිදුවීම් elevated PowerShell විධාන මගින් නිර්මාණය කරන්න: වැරදි මුරපද 6ක් (event 4625 — T1110 Brute Force); නව පරිශීලකයෙකු සෑදීම (4720 — T1136.001); Administrators කණ්ඩායමට එක් කිරීම (4732 — T1098); Security log මකා දැමීම (1102 — T1070.001). මේවා හුදකලා lab VM එකේ ආරක්ෂිතය. නැවත පරීක්ෂා කිරීමට 03-Agent-Enrolled snapshot එකට restore කළ හැක.</p>
+        <p class="si"><b>Dashboard හි විමර්ශනය:</b> Threat Hunting/Discover හි කාලය අවසන් මිනිත්තු 15 ලෙස තබා agent.name:Win-Victim AND data.win.system.eventID:(4625 OR 4720 OR 4732 OR 1102) ලෙස සොයන්න. rule.id, rule.level, rule.description, rule.mitre.id සහ data.win.system.eventID තීරු එක් කරන්න.</p>
+        <p class="si"><b>4625 අර්ථ නිරූපණය:</b> subStatus 0xC0000064 = පරිශීලක නාමය නොපවතී; 0xC000006A = නම නිවැරදි නමුත් මුරපදය වැරදියි. Wazuh දුන් සැබෑ rule.id සහ level සටහන් කරගන්න — 7 වන පියවරට ඒවා අවශ්‍යයි.</p>
       </div>
     </section>
 
@@ -828,6 +905,8 @@ wevtutil cl Security</code></pre>
         <div class="kicker-left"><div class="num-badge" style="background:var(--purple)">8</div><h2>Step 6 — File integrity monitoring</h2></div>
       </div>
       <p class="lede">File integrity monitoring (FIM) tells you when files in a watched location are added, changed or deleted. In Wazuh it is called <span class="term">syscheck</span>. This is the feature the beginner video demonstrates — here you will add your own folder.</p>
+
+      <div class="callout snap"><b>📌 Snapshot checkpoint — take <span class="term">04-Before-FIM</span> on Win-Victim before you edit the agent's config file.</b> A typo in <span class="term">ossec.conf</span> can stop the agent from starting. Shut Win-Victim down, take the snapshot, start it again. <a class="snap-link" href="#snapshots">How ↑</a></div>
 
       <ol class="step-list">
         <li>On Win-Victim create the folder to watch (elevated PowerShell): <pre class="code"><code>mkdir C:\LabWatch</code></pre></li>
@@ -858,7 +937,10 @@ Remove-Item C:\LabWatch\notes.txt                    # deleted</code></pre>
       <div class="si-divider"><button class="si-toggle" data-target="si-fim" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
       <div class="si-panel" id="si-fim">
         <span class="si-label">සිංහල පරිවර්තනය</span>
-        <p class="si">File Integrity Monitoring මගින් C:\LabWatch ෆෝල්ඩරයේ ගොනු එකතු වීම, වෙනස් වීම සහ මකා දැමීම ගැන Wazuh අනතුරු ඇඟවීම් ලබා දෙයි. agent හි ossec.conf ගොනුවේ &lt;syscheck&gt; කොටසට ෆෝල්ඩරය එක් කර, service එක නැවත ආරම්භ කළ යුතුය.</p>
+        
+        <p class="si"><b>FIM යනු:</b> File integrity monitoring (Wazuh හි syscheck) මගින් නිරීක්ෂණය කරන ෆෝල්ඩරයක ගොනු එකතු වීම, වෙනස් වීම සහ මකා දැමීම ගැන අනතුරු ඇඟවීම් ලැබේ. පළමුව Win-Victim හි 04-Before-FIM snapshot එක ගන්න.</p>
+        <p class="si"><b>සැකසුම:</b> Win-Victim හි C:\LabWatch ෆෝල්ඩරය සාදන්න. agent හි ossec.conf පිටපතක් ගෙන Administrator ලෙස විවෘත කර ඇති syscheck කොටස තුළ C:\LabWatch සඳහා realtime directories පේළිය එක් කරන්න. ෆෝල්ඩරය agent ආරම්භ වීමට පෙර තිබිය යුතුය. ඉන්පසු WazuhSvc service එක නැවත ආරම්භ කරන්න.</p>
+        <p class="si"><b>පරීක්ෂාව:</b> notes.txt ගොනුවක් සෑදීම (added), එයට පෙළ එක් කිරීම (modified) සහ මකා දැමීම (deleted) කරන්න. Dashboard හි File Integrity Monitoring බලන්න; alerts තුනක් අපේක්ෂා කරන්න. Windows පථය කුඩා අකුරින් ගබඩා කරන නිසා සෙවීම කුඩා අකුරින් කරන්න. Realtime මගින් වෙනසක් සිදු වූ බව පෙන්වයි, නමුත් එය කළේ කවුදැයි නොපෙන්වයි — whodata ඒ සඳහා ය.</p>
       </div>
     </section>
     <!-- ================= 9. RULES ================= -->
@@ -867,6 +949,8 @@ Remove-Item C:\LabWatch\notes.txt                    # deleted</code></pre>
         <div class="kicker-left"><div class="num-badge" style="background:var(--red)">9</div><h2>Step 7 — Write custom detection rules</h2></div>
       </div>
       <p class="lede">This is the part that turns a tutorial into portfolio work. Wazuh ships thousands of default rules; detection engineering is deciding which behaviours matter to <i>you</i>, raising their severity, tagging them with ATT&amp;CK, and testing that they fire.</p>
+
+      <div class="callout snap"><b>📌 Snapshot checkpoint — take <span class="term">03-Before-Custom-Rules</span> on Wazuh-Server before you edit the rules file.</b> If the manager will not start after a bad rule, restore this snapshot instead of hunting for the typo. Run <span class="term">sudo poweroff</span>, take the snapshot, start the VM again. <a class="snap-link" href="#snapshots">How ↑</a></div>
 
       <div class="callout warn">Never edit Wazuh's default ruleset — upgrades overwrite it. Put your own rules in <span class="term">/var/ossec/etc/rules/local_rules.xml</span> and use IDs from <b>100000</b> upward.</div>
 
@@ -914,6 +998,8 @@ Remove-Item C:\LabWatch\notes.txt                    # deleted</code></pre>
         <li><b>Confirm</b> the new alerts appear with <span class="term">rule.id</span> 100101–100104, the right level, and the ATT&amp;CK tag.</li>
       </ol>
 
+      <div class="callout snap"><b>📌 Snapshot checkpoint — once all four rules fire, take <span class="term">04-Custom-Rules-Done</span> on Wazuh-Server and <span class="term">05-Lab01-Complete</span> on Win-Victim.</b> Shut each VM down first, then take the snapshot, then start them again. These two are your starting point for Lab 02. <a class="snap-link" href="#snapshots">How ↑</a></div>
+
       <div class="subhead"><span class="sub-dot" style="background:var(--green)"></span>Rule map</div>
       <div class="table-wrap"><table class="ctable">
         <thead><tr><th>Rule ID</th><th>Detects</th><th>Level</th><th>MITRE ATT&amp;CK</th><th>NIST CSF</th></tr></thead>
@@ -936,7 +1022,11 @@ Remove-Item C:\LabWatch\notes.txt                    # deleted</code></pre>
       <div class="si-divider"><button class="si-toggle" data-target="si-rules" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
       <div class="si-panel" id="si-rules">
         <span class="si-label">සිංහල පරිවර්තනය</span>
-        <p class="si">/var/ossec/etc/rules/local_rules.xml ගොනුවේ ඔබේම රීති ලියන්න (ID 100000 සිට ඉහළට). රීති සුරැකීමට පෙර wazuh-analysisd -t මගින් පරීක්ෂා කර, manager එක නැවත ආරම්භ කර, නැවත සිදුවීම් ජනනය කර alert පෙනෙනවාදැයි බලන්න. පෙරනිමි (default) රීති කිසිවිටෙක වෙනස් නොකරන්න.</p>
+        
+        <p class="si"><b>අදහස:</b> Wazuh හි පෙරනිමි රීති දහස් ගණනක් ඇත; detection engineering යනු ඔබට වැදගත් හැසිරීම් තෝරා ඒවායේ severity ඉහළ නංවා, ATT&amp;CK ටැග් කර, ඒවා ක්‍රියා කරන බව පරීක්ෂා කිරීමයි. පෙරනිමි රීති කිසිවිටෙක වෙනස් නොකරන්න (upgrade වලදී උඩින් ලියැවේ); ඔබේ රීති /var/ossec/etc/rules/local_rules.xml හි ID 100000 සිට ලියන්න. පළමුව Wazuh-Server හි 03-Before-Custom-Rules snapshot එක ගන්න.</p>
+        <p class="si"><b>ක්‍රියා පිළිවෙල:</b> 5 වන පියවරේ ඔබේ alerts වල සැබෑ parent rule ID සනාථ කරන්න (මාර්ගෝපදේශය 60122, 60154, 63104 උපකල්පනය කරයි — ඔබේ ID වෙනස් නම් ඒවා භාවිත කරන්න); local_rules.xml සංස්කරණය කර රීති එක් කරන්න; manager නැවත ආරම්භ කිරීමට පෙර sudo /var/ossec/bin/wazuh-analysisd -t මගින් syntax පරීක්ෂා කරන්න; ඉන්පසු 5 සහ 6 පියවරවල ක්‍රියාකාරකම් නැවත කර rule.id 100101–100104 පෙනෙන බව තහවුරු කරන්න.</p>
+        <p class="si"><b>රීති හතර:</b> 100101 — විනාඩි 2ක් තුළ අසාර්ථක පිවිසුම් 5+ (T1110, level 10). 100102 — local Administrators කණ්ඩායමට සාමාජිකයෙකු එක් කිරීම (T1098, level 12). 100103 — Security audit log මකා දැමීම (T1070.001, level 14). 100104 — C:\LabWatch හි ඕනෑම ගොනු වෙනසක් (T1565.001, level 10). සියල්ල NIST CSF DETECT ට ගැළපේ.</p>
+        <p class="si"><b>Detection engineer ලෙස සිතන්න:</b> False positives: සැබෑ administrator ද පරිශීලකයින් Administrators ට එක් කරයි — 100102 tune කරන ආකාරය (allow-list) ලියන්න. Thresholds: 5 උත්සාහ/තත්පර 120 වෙනුවට 3 සහ 10 උත්සාහ කර ඝෝෂාව සටහන් කරන්න. Severity: Security log මකා දැමීම නීත්‍යනුකූල වීම දුර්ලභ බැවින් ඉහළම level එක ලැබේ. Evasion: admin අයිතිය ඇති ප්‍රහාරකයෙකුට agent නවත්විය හැක — ඒ සඳහා වෙනත් සංඥාවක් සටහන් කරන්න. සාර්ථක වූ පසු Wazuh-Server හි 04-Custom-Rules-Done සහ Win-Victim හි 05-Lab01-Complete snapshots ගන්න.</p>
       </div>
     </section>
 
@@ -979,7 +1069,10 @@ Remove-Item C:\LabWatch\notes.txt                    # deleted</code></pre>
       <div class="si-divider"><button class="si-toggle" data-target="si-publish" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
       <div class="si-panel" id="si-publish">
         <span class="si-label">සිංහල පරිවර්තනය</span>
-        <p class="si">ස්ක්‍රීන්ෂොට්, local_rules.xml, ATT&amp;CK සිතියම්ගත කිරීම් සහ ඔබ ඉගෙනගත් දේ ඔබේ වෙබ් අඩවියට ප්‍රකාශයට පත් කරන්න. මුරපද, wazuh-passwords.txt සහ agent යතුරු කිසිවිටෙක ප්‍රකාශයට පත් නොකරන්න.</p>
+        
+        <p class="si"><b>ස්ක්‍රීන්ෂොට් 8ක්:</b> Wazuh-Server network සහ port-forward වගුව; ip -br a ප්‍රතිදානය; dashboard මුල් පිටුව; Agents (Win-Victim Active); events table (rule.id, level, MITRE); FIM alerts; ඔබේ රීති fire වීම (1001xx); සහ wazuh-analysisd -t සාර්ථක වීම.</p>
+        <p class="si"><b>Lab සටහන (වචන 400–700):</b> 1 ඉලක්කය; 2 සැකසුම (රූප සටහන සහ VM); 3 මා කළ දේ (ප්‍රධාන පියවර, ස්ක්‍රීන්ෂොට් 3–5); 4 Detections (රීති, alerts, ATT&amp;CK); 5 වැරදුණු දේ (සැබෑ ගැටලුවක් සහ විසඳුම — උදා: Ubuntu 25.04 end-of-life හෝ LVM තැටි ප්‍රමාණය); 6 ඊළඟට කරන දේ (Lab 02).</p>
+        <p class="si"><b>ප්‍රකාශ කළ යුතු / නොයුතු:</b> ප්‍රකාශ කරන්න: local_rules.xml රීති සහ ATT&amp;CK සිතියම (SentinelOps repo වෙත), architecture රූපය, ස්ක්‍රීන්ෂොට්, lab සටහන. කිසිවිටෙක නොදමන්න: admin මුරපදය සහ wazuh-passwords.txt, agent යතුරු (client.keys) හෝ API tokens, ඔබේ නම/email/device ID පෙනෙන ස්ක්‍රීන්ෂොට්.</p>
       </div>
     </section>
 
@@ -992,6 +1085,9 @@ Remove-Item C:\LabWatch\notes.txt                    # deleted</code></pre>
         <thead><tr><th>Symptom</th><th>Likely cause</th><th>Fix</th></tr></thead>
         <tbody>
           <tr><td class="row-head">apt update shows 404 / "no longer has a Release file"</td><td>The Ubuntu release is end of life (for example 25.04)</td><td>Use Ubuntu Server 24.04 LTS (or 26.04 LTS), not an expired release</td></tr>
+          <tr><td class="row-head">Wazuh installer fails or leaves a half-installed system</td><td>Network drop, low memory, interrupted run</td><td>Power off Wazuh-Server, restore snapshot <span class="term">01-Ubuntu-Base</span>, start it, run the installer again</td></tr>
+          <tr><td class="row-head">Manager will not start after editing rules</td><td>Syntax error in local_rules.xml</td><td>Restore snapshot <span class="term">03-Before-Custom-Rules</span> and re-enter the rules, or fix the file and re-run <span class="term">wazuh-analysisd -t</span></td></tr>
+          <tr><td class="row-head">Agent will not start after editing ossec.conf</td><td>XML typo in the config</td><td>Restore the backup copy <span class="term">ossec.conf.bak</span>, or restore snapshot <span class="term">04-Before-FIM</span></td></tr>
           <tr><td class="row-head"><span class="term">df -h /</span> shows only about 15 GB on a 30 GB disk</td><td>Installer used LVM and left the volume half-sized</td><td>Run <span class="term">sudo lvextend -r -l +100%FREE /dev/mapper/ubuntu--vg-ubuntu--lv</span> to grow the volume and filesystem</td></tr>
           <tr><td class="row-head">"Wazuh dashboard server is not ready yet"</td><td>Indexer still starting, or too little RAM</td><td>Wait 2–3 minutes, check <span class="term">free -h</span>, restart <span class="term">wazuh-indexer</span> then <span class="term">wazuh-dashboard</span>, cap the JVM heap at 1g</td></tr>
           <tr><td class="row-head">Browser cannot open https://127.0.0.1:8443</td><td>Port-forward missing or wrong, VM off</td><td>Check the 8443 → 443 rule on Adapter 1 (Host IP 127.0.0.1); use https, not http</td></tr>
@@ -1006,7 +1102,10 @@ Remove-Item C:\LabWatch\notes.txt                    # deleted</code></pre>
       <div class="si-divider"><button class="si-toggle" data-target="si-trouble" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
       <div class="si-panel" id="si-trouble">
         <span class="si-label">සිංහල පරිවර්තනය</span>
-        <p class="si">ගැටලුවක් ඇති වුවහොත් ඉහත වගුව බලන්න. බොහෝ අවස්ථාවල හේතුව වන්නේ ජාල නාමය වැරදීම, RAM ප්‍රමාණවත් නොවීම, නැතහොත් සහාය නොදක්වන Ubuntu අනුවාදයක් භාවිතයයි. ඕනෑම විශාල වෙනසක් කිරීමට පෙර snapshot එකක් ගන්න.</p>
+        
+        <p class="si"><b>ස්ථාපන ගැටලු:</b> apt update 404 — Ubuntu release එක end-of-life; Ubuntu 24.04 LTS භාවිත කරන්න. df -h / හි ≈15 GB පමණක් — LVM නිසා; lvextend විධානය භාවිත කරන්න. Wazuh ස්ථාපකය අසාර්ථක හෝ අඩක් ස්ථාපිතයි — VM power off කර 01-Ubuntu-Base වෙත restore කර නැවත ධාවනය කරන්න.</p>
+        <p class="si"><b>Dashboard / Agent:</b> "Wazuh dashboard server is not ready yet" — මිනිත්තු 2–3 රැඳී, free -h බලා indexer සහ dashboard restart කර, JVM heap 1g කරන්න. Browser හි 127.0.0.1:8443 විවෘත නොවේ — port-forward රීතිය (8443 → 443, Host IP 127.0.0.1) සහ http නොව https භාවිතය පරීක්ෂා කරන්න. Agent Active නොවේ — SOC-Lab-Net නම, IP, version mismatch සහ ports 1514/1515 පරීක්ෂා කර wizard විධානයෙන් නැවත ස්ථාපනය කරන්න. Windows events නොපෙනේ — කාල පරාසය පුළුල් කර ossec.log බලන්න.</p>
+        <p class="si"><b>FIM සහ rules:</b> FIM alerts නැත — ossec.conf හි path සහ XML typo බලා WazuhSvc restart කරන්න. Custom rule fire නොවේ — සැබෑ rule.id ට if_sid යාවත්කාලීන කර wazuh-analysisd -t ධාවනය කර manager restart කරන්න. Rules නිසා manager පණ නොගැන්වේ — 03-Before-Custom-Rules වෙත restore කරන්න. ossec.conf නිසා agent පණ නොගැන්වේ — ossec.conf.bak හෝ 04-Before-FIM යොදන්න. Laptop මන්දගාමී — browser සහ අනෙක් apps වසා, Kali සහ pfSense off කර, indexer heap සීමා කරන්න. ඕනෑම විශාල වෙනසකට පෙර snapshot එකක් ගන්න.</p>
       </div>
     </section>
 
@@ -1031,6 +1130,13 @@ Remove-Item C:\LabWatch\notes.txt                    # deleted</code></pre>
         <li><span class="chk"></span><span><b>FIM (syscheck)</b> detects added, modified and deleted files; <b>realtime</b> sees changes immediately, <b>whodata</b> also records who made them.</span></li>
         <li><span class="chk"></span><span>Detection engineering loop: <b>generate event → find parent rule → write rule → test → tune</b>.</span></li>
       </ul>
+      <div class="si-divider"><button class="si-toggle" data-target="si-exam" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-exam">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        <p class="si"><b>Wazuh සංරචක:</b> Central components තුනකි: manager (rules මගින් events විශ්ලේෂණය), indexer (alerts ගබඩා කිරීම/සෙවීම), dashboard (web UI). Agents endpoints මත ධාවනය වේ; Filebeat manager එකෙන් indexer වෙත alerts යවයි. Ports: agent 1514, enrollment 1515, API 55000, dashboard 443.</p>
+        <p class="si"><b>Rules සහ events:</b> Custom rules local_rules.xml හි ID 100000+ ලෙස ලියයි; පෙරනිමි රීති කිසිවිටෙක සංස්කරණය නොකරයි. Rule levels 0–15 (0 = alert නැත). Windows events: 4624/4625 පිවිසුම සාර්ථක/අසාර්ථක; 4720 user created; 4732 local group එකතු කිරීම; 1102 audit log cleared. Sub-status 0xC0000064 = unknown user, 0xC000006A = wrong password.</p>
+        <p class="si"><b>FIM සහ චක්‍රය:</b> FIM (syscheck): added / modified / deleted; realtime = වහාම, whodata = කවුදැයි ද. Detection engineering චක්‍රය: event ජනනය → parent rule සොයා ගැනීම → rule ලිවීම → පරීක්ෂා → tune.</p>
+      </div>
       </div>
     </section>
 
@@ -1045,6 +1151,15 @@ Remove-Item C:\LabWatch\notes.txt                    # deleted</code></pre>
       <div class="role-card"><div class="role-title"><span class="ico" style="background:#F09300">DE</span>Detection engineering</div><p>Writing, testing and tuning rules like 100101–100104, then documenting false positives. This is exactly what the SentinelOps project showcases.</p></div>
       <div class="role-card"><div class="role-title"><span class="ico" style="background:#4285F4">TH</span>Threat hunting</div><p>Searching indexed events for patterns no rule flagged yet, such as new local accounts created outside business hours.</p></div>
       <div class="callout soc">SOC takeaway: a log-cleared event (1102) or a surprise Administrators change is a classic post-compromise signal — practise reacting to those within minutes, not days.</div>
+      <div class="si-divider"><button class="si-toggle" data-target="si-soc" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-soc">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        <p class="si">මෙම lab එක SOC එකක දෛනික වැඩ චක්‍රයේ කුඩා ආකෘතියකි: alerts පැමිණේ, ඔබ විමර්ශනය කරයි, සමහර විට alert එක පිටුපස ඇති rule එක වැඩිදියුණු කරයි.</p>
+        <p class="si"><b>Tier 1 triage:</b> 4625 සිදුවීම් පිපිරීමක් පරිශීලකයාගේ typo එකක්ද මුරපද අනුමාන කිරීමක්ද යන්න sub-status, ඉලක්ක ගිණුම සහ උත්සාහ ගණන/කාල පරාසය අනුව තීරණය කිරීම.</p>
+        <p class="si"><b>Detection engineering:</b> 100101–100104 වැනි rules ලිවීම, පරීක්ෂා කිරීම, tune කිරීම සහ false positives ලේඛනගත කිරීම — SentinelOps ව්‍යාපෘතිය පෙන්වන්නේ මෙයයි.</p>
+        <p class="si"><b>Threat hunting:</b> කිසිදු rule එකක් තවම ගෙන නැති රටා සෙවීම — උදා: වැඩ කාලයෙන් පිටත සෑදූ නව local ගිණුම්.</p>
+        <p class="si">ප්‍රධාන කරුණ: log-cleared (1102) සිදුවීමක් හෝ අනපේක්ෂිත Administrators වෙනසක් post-compromise සංඥා වේ — දින නොව මිනිත්තු තුළ ප්‍රතිචාර දක්වන්න.</p>
+      </div>
       </div>
     </section>
 
@@ -1059,6 +1174,15 @@ Remove-Item C:\LabWatch\notes.txt                    # deleted</code></pre>
       <div class="role-card"><div class="role-title"><span class="ico" style="background:#34A853">CT</span>Link to TrailSIEM</div><p>Wazuh also has an AWS integration that can ingest CloudTrail logs, which is a useful point of comparison when you build the TrailSIEM (DETECT) project.</p></div>
       <div class="role-card"><div class="role-title"><span class="ico" style="background:#4285F4">HD</span>Hardening your own SIEM</div><p>Restrict who can reach the dashboard and the API, protect the admin password, and keep the components on matching versions — the SIEM is itself a high-value target.</p></div>
       <div class="callout cloud">Cloud takeaway: detection logic (what you alert on, at what severity, mapped to which technique) transfers directly from endpoint logs to CloudTrail and VPC flow logs.</div>
+      <div class="si-divider"><button class="si-toggle" data-target="si-cloud" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-cloud">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        <p class="si">Cloud workloads වල ද OS නිරීක්ෂණය අවශ්‍යයි, සහ එකම අදහස් cloud logs වලටද අදාළ වේ.</p>
+        <p class="si"><b>Cloud හි එකම agent රටාව:</b> Cloud account එකක Windows/Linux instance එකකට එකම agent-to-manager ආකෘතිය යොදයි. Security groups මගින් agents ට ports 1514 සහ 1515 ළඟා විය හැකිද යන්න තීරණය වේ.</p>
+        <p class="si"><b>TrailSIEM සමග සම්බන්ධය:</b> Wazuh හි AWS integration මගින් CloudTrail logs ingest කළ හැක — TrailSIEM (DETECT) ව්‍යාපෘතිය ගොඩනඟන විට සැසඳීමට ප්‍රයෝජනවත්.</p>
+        <p class="si"><b>ඔබේම SIEM ශක්තිමත් කිරීම:</b> Dashboard සහ API වෙත ප්‍රවේශය සීමා කරන්න, admin මුරපදය ආරක්ෂා කරන්න, components එකම version එකේ තබන්න — SIEM එක ම ඉහළ වටිනාකමක් ඇති ඉලක්කයකි.</p>
+        <p class="si">ප්‍රධාන කරුණ: detection logic (කුමකට, කුමන severity එකෙන්, කුමන technique එකට සිතියම්ගතද) endpoint logs වලින් CloudTrail සහ VPC flow logs වෙත සෘජුවම මාරු වේ.</p>
+      </div>
       </div>
     </section>
 
@@ -1086,6 +1210,14 @@ Remove-Item C:\LabWatch\notes.txt                    # deleted</code></pre>
           <tr><td class="acr">MSI</td><td class="term-full">Microsoft Installer package</td><td>Windows installer format used for the Wazuh agent.</td></tr>
         </tbody>
       </table>
+      </div>
+      <div class="si-divider"><button class="si-toggle" data-target="si-glossary" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-glossary">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        <p class="si"><b>SIEM / XDR:</b> SIEM — බොහෝ මූලාශ්‍රවලින් ලොග් එකතු කර සහසම්බන්ධ කර alerts ලබා දෙයි. XDR — endpoints, ජාලය සහ cloud හරහා හඳුනාගැනීම හා ප්‍රතිචාරය.</p>
+        <p class="si"><b>FIM / HIDS:</b> FIM — නිරීක්ෂණය කරන ගොනු එකතු/වෙනස්/මකා දැමීමේදී alert (Wazuh හි syscheck). HIDS — තනි පරිගණකයක ක්‍රියාකාරකම් නිරීක්ෂණය (Wazuh agent මෙන්).</p>
+        <p class="si"><b>ATT&amp;CK / TTP / CSF / IoC:</b> MITRE ATT&amp;CK — ප්‍රහාරකයින්ගේ tactics සහ techniques පිළිබඳ පොදු ලැයිස්තුව. TTP — ප්‍රහාරකයෙකු ක්‍රියා කරන ආකාරය (Tactics, Techniques, Procedures). NIST CSF — ආරක්ෂක functions රාමුව (මෙම lab = DETECT). IoC — බිඳවැටීමක සාක්ෂි (උදා: log-cleared සිදුවීමක්).</p>
+        <p class="si"><b>VirtualBox සහ තැටි:</b> NAT — VirtualBox මගින් VM ට host හරහා අන්තර්ජාලය ලබා දීම. Internal network — එකම නම ඇති VM අතර පමණක් ජාලය (SOC-Lab-Net). LVM — නම්‍යශීලී Linux තැටි සැලැස්ම (පෙරනිමියෙන් සම්පූර්ණ තැටිය නොයෙදිය හැක). MSI — Wazuh agent සඳහා භාවිත Windows ස්ථාපන ආකෘතිය.</p>
       </div>
       </div>
     </section>
@@ -1134,6 +1266,13 @@ Remove-Item C:\LabWatch\notes.txt                    # deleted</code></pre>
             <tr><td class="row-head">Whodata</td><td>Uses the OS audit system</td><td>Adds user and process info</td><td>Needs audit setup; more overhead</td></tr>
           </tbody>
         </table>
+      </div>
+      <div class="si-divider"><button class="si-toggle" data-target="si-comparison" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-comparison">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        <p class="si"><b>Wazuh සංරචක:</b> Manager — rules මගින් events විශ්ලේෂණය කර alerts සෑදීම. Indexer — alerts ගබඩා කිරීම සහ සෙවීම. Dashboard — සෙවීම, FIM සහ ATT&amp;CK දසුන් සඳහා web UI. Agent — endpoint එකේ logs සහ ගොනු වෙනස්වීම් එකතු කිරීම. Manager, indexer, dashboard Wazuh-Server මත; agent Win-Victim මත.</p>
+        <p class="si"><b>Windows events:</b> 4624 සාර්ථක පිවිසුම (baseline; අමුතු ගිණුම/වේලාව/මූලාශ්‍රය නම් සැක සහිතය). 4625 අසාර්ථක පිවිසුම (මුරපද අනුමාන කිරීම හෝ typo). 4720 පරිශීලක ගිණුම සෑදීම (persistence විය හැක). 4732 local කණ්ඩායමකට එක් කිරීම (privilege escalation විය හැක). 1102 audit log මකා දැමීම (පාඩු සැඟවීමට උත්සාහයක් විය හැක).</p>
+        <p class="si"><b>FIM ආකාර:</b> Scheduled — වරින්වර hashes සංසන්දනය; අඩු බර; වෙනස හමුවන්නේ ඊළඟ scan එකේදී. Realtime — ෆෝල්ඩරය අඛණ්ඩව නිරීක්ෂණය; වහාම alerts; නමුත් වෙනස කළේ කවුදැයි නොපෙන්වයි. Whodata — OS audit පද්ධතිය භාවිතයෙන් user සහ process තොරතුරු එක් කරයි; audit සැකසුම සහ වැඩි බර අවශ්‍යයි.</p>
       </div>
       </div>
     </section>

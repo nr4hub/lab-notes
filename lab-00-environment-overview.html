@@ -1,0 +1,1698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab 00 — Lab Environment Overview — SOC Home Lab Notes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;500&family=Noto+Sans+Sinhala:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue:#8ab4f8; --red:#f28b82; --yellow:#fdd663; --green:#81c995; --purple:#c58af9;
+    --ink:#e8eaed; --sub:#9aa0a6; --paper:#232427; --bg:#131417; --line:#3c4043;
+    --card-shadow: 0 1px 2px rgba(0,0,0,.5), 0 2px 10px rgba(0,0,0,.4);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{ margin:0; font-family:'Roboto', Arial, sans-serif; background:var(--bg); color:var(--ink); line-height:1.65; overflow-x:hidden; }
+  h1,h2,h3,.slide-title{ font-family:'Google Sans','Roboto',Arial,sans-serif; }
+  img{max-width:100%;}
+  a:focus-visible, button:focus-visible{ outline:2px solid #1a73e8; outline-offset:2px; }
+  .si{ font-family:'Noto Sans Sinhala','Roboto',sans-serif; }
+
+  .mobile-bar{ display:none; position:sticky; top:0; z-index:40; align-items:center; justify-content:space-between; background:var(--paper); border-bottom:1px solid var(--line); padding:12px 16px; }
+  .mobile-bar .m-title{ font-family:'Google Sans',sans-serif; font-weight:700; font-size:14.5px; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .menu-btn{ display:flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:10px; border:1px solid var(--line); background:var(--paper); flex:none; cursor:pointer; padding:0; }
+  .menu-btn span, .menu-btn span::before, .menu-btn span::after{ content:""; display:block; width:18px; height:2px; background:var(--ink); position:relative; transition:transform .2s ease, opacity .2s ease; }
+  .menu-btn span::before{ position:absolute; top:-6px; } .menu-btn span::after{ position:absolute; top:6px; }
+  .menu-btn[aria-expanded="true"] span{ background:transparent; }
+  .menu-btn[aria-expanded="true"] span::before{ top:0; transform:rotate(45deg); background:var(--ink); }
+  .menu-btn[aria-expanded="true"] span::after{ top:0; transform:rotate(-45deg); background:var(--ink); }
+  .toc-backdrop{ display:none; position:fixed; inset:0; background:rgba(32,33,36,.45); z-index:45; }
+  .toc-backdrop.show{ display:block; }
+
+  .hero{ background:linear-gradient(120deg,#1a73e8 0%, #7B61FF 45%, #EA4335 100%); color:#fff; padding:56px 24px 40px; position:relative; overflow:hidden; }
+  .hero::after{ content:""; position:absolute; right:-60px; top:-60px; width:280px;height:280px;border-radius:50%; background:rgba(255,255,255,.08); pointer-events:none; }
+  .hero::before{ content:""; position:absolute; left:10%; bottom:-120px; width:220px;height:220px;border-radius:50%; background:rgba(255,255,255,.07); pointer-events:none; }
+  .hero-inner{max-width:1100px;margin:0 auto;position:relative;z-index:1;}
+  .eyebrow{ display:inline-block; font-size:12px; letter-spacing:.14em; text-transform:uppercase; background:rgba(255,255,255,.18); padding:6px 12px; border-radius:20px; margin-bottom:18px; font-weight:500; }
+  .hero h1{font-size:34px; margin:0 0 12px; font-weight:700; line-height:1.2;}
+  .hero p.lead{font-size:16.5px; max-width:660px; opacity:.95; margin:0 0 20px;}
+  .hero-meta{display:flex; gap:22px; flex-wrap:wrap; font-size:13.5px; opacity:.92; margin-bottom:6px;}
+  .hero-meta span{display:flex; align-items:center; gap:8px;}
+  .dot{width:6px;height:6px;border-radius:50%;background:#fff;display:inline-block; flex:none;}
+
+  .hero-search-row{ margin-top:22px; display:flex; align-items:flex-start; gap:16px; flex-wrap:wrap; }
+
+  .site-search{ position:relative; z-index:2; flex:1 1 300px; }
+  .site-search input{
+    width:100%; padding:13px 16px 13px 44px; border-radius:14px;
+    border:1px solid rgba(255,255,255,.32); background:rgba(255,255,255,.14);
+    color:#fff; font-size:14.5px; backdrop-filter:blur(6px); box-sizing:border-box;
+  }
+  .site-search input::placeholder{ color:rgba(255,255,255,.78); }
+  .site-search input:focus{ outline:none; background:rgba(255,255,255,.22); border-color:#fff; }
+  .site-search .s-icon{
+    position:absolute; left:15px; top:22px; transform:translateY(-50%);
+    font-size:14px; opacity:.85; pointer-events:none;
+  }
+  .site-search .s-clear{
+    position:absolute; right:8px; top:22px; transform:translateY(-50%);
+    width:26px; height:26px; border-radius:8px; border:none; background:rgba(255,255,255,.16);
+    color:#fff; font-size:13px; cursor:pointer; display:none; align-items:center; justify-content:center;
+  }
+  .site-search.has-query .s-clear{ display:flex; }
+  .site-search .s-dropdown{
+    display:none; position:absolute; top:calc(100% + 8px); left:0; right:0;
+    background:var(--paper); border:1px solid var(--line); border-radius:14px;
+    box-shadow:var(--card-shadow); max-height:320px; overflow:auto; padding:6px;
+  }
+  .site-search .s-dropdown.show{ display:block; }
+  .site-search .s-item{
+    display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:9px;
+    color:var(--ink); text-decoration:none; font-size:13.5px; cursor:pointer;
+  }
+  .site-search .s-item:hover, .site-search .s-item.hl{ background:#2c2d30; }
+  .site-search .s-item .s-num{
+    font-family:'Roboto Mono',monospace; font-size:11px; color:var(--sub);
+    background:#1a1b1e; border-radius:6px; padding:2px 6px; flex:none; min-width:24px; text-align:center;
+  }
+  .site-search .s-empty{ padding:14px 10px; font-size:13px; color:var(--sub); text-align:center; }
+
+  .hero-find-col{ flex:1 1 300px; }
+  .hero-find-col .site-search.find-page-search{ max-width:none; }
+  .find-page-nav{
+    display:none; align-items:center; justify-content:space-between; gap:8px;
+    margin-top:8px; font-size:12px; color:rgba(255,255,255,.85);
+  }
+  .find-page-nav.show{ display:flex; }
+  .find-page-nav .snav-btns{ display:flex; gap:6px; }
+  .find-page-nav button{
+    width:26px; height:26px; border-radius:8px; border:1px solid rgba(255,255,255,.32);
+    background:rgba(255,255,255,.14); color:#fff; font-size:13px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .find-page-nav button:hover{ background:rgba(255,255,255,.24); }
+  .find-page-nav button:disabled{ opacity:.4; cursor:default; }
+
+  .path-nav{ max-width:1100px; margin:26px auto 0; position:relative; z-index:1; display:grid; grid-template-columns:1fr auto 1fr; gap:12px; align-items:stretch; }
+  .path-btn{ display:flex; align-items:center; gap:10px; text-decoration:none; color:#fff; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.28); border-radius:14px; padding:10px 16px; backdrop-filter:blur(6px); transition:background .15s ease, transform .15s ease; }
+  .path-btn:hover{ background:rgba(255,255,255,.24); transform:translateY(-1px); }
+  .path-btn .p-arrow{ font-size:16px; flex:none; }
+  .path-btn .p-text{ display:flex; flex-direction:column; line-height:1.25; min-width:0; }
+  .path-btn .p-kicker{ font-size:10px; letter-spacing:.1em; text-transform:uppercase; opacity:.8; }
+  .path-btn .p-title{ font-size:13.5px; font-weight:600; font-family:'Google Sans',sans-serif; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .path-btn.next{ justify-content:flex-end; text-align:right; }
+  .path-btn.next .p-text{ align-items:flex-end; }
+  .path-btn.index{ justify-content:center; text-align:center; background:rgba(0,0,0,.22); border-color:rgba(255,255,255,.28); padding:10px 18px; }
+  .path-btn.index .p-text{ align-items:center; }
+
+  .layout{ max-width:1180px; margin:-8px auto 60px; padding:0 24px; display:grid; grid-template-columns:250px 1fr; gap:32px; align-items:start; }
+  nav.toc{ background:var(--paper); border-radius:16px; box-shadow:var(--card-shadow); padding:18px 10px; position:sticky; top:20px; max-height:calc(100vh - 40px); overflow:auto; }
+  nav.toc .toc-head{ font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--sub); padding:6px 14px 10px; font-weight:500; display:flex; align-items:center; justify-content:space-between; }
+  nav.toc a{ display:block; padding:9px 14px; border-radius:10px; color:var(--ink); text-decoration:none; font-size:13.5px; border-left:3px solid transparent; }
+  nav.toc a:hover{background:#2c2d30;}
+  nav.toc a.active{background:#2a3a55; color:#a8c7fa; border-left-color:var(--blue); font-weight:500;}
+  nav.toc .toc-divider{ margin:10px 10px 6px; border-top:1px solid var(--line); padding-top:10px; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--sub); font-weight:500; }
+  main{min-width:0;}
+
+  /* ===== In-page search (lives inside nav.toc — shared by desktop sidebar + mobile drawer) ===== */
+  .toc-search{ padding:4px 10px 12px; }
+  .toc-search-box{ position:relative; }
+  .toc-search input{
+    width:100%; padding:9px 34px 9px 32px; border-radius:10px; border:1px solid var(--line);
+    background:#1a1b1e; color:var(--ink); font-size:13px; box-sizing:border-box;
+  }
+  .toc-search input::placeholder{ color:var(--sub); }
+  .toc-search input:focus{ outline:none; border-color:#5f6368; }
+  .toc-search .s-icon{ position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:12px; opacity:.7; pointer-events:none; }
+  .toc-search .s-clear{
+    position:absolute; right:5px; top:50%; transform:translateY(-50%);
+    width:22px; height:22px; border-radius:6px; border:none; background:#2c2d30; color:var(--sub);
+    font-size:11px; cursor:pointer; display:none; align-items:center; justify-content:center;
+  }
+  .toc-search.has-query .s-clear{ display:flex; }
+  .toc-search-nav{
+    display:none; align-items:center; justify-content:space-between; gap:8px;
+    margin-top:8px; font-size:11.5px; color:var(--sub);
+  }
+  .toc-search-nav.show{ display:flex; }
+  .toc-search-nav .snav-btns{ display:flex; gap:4px; }
+  .toc-search-nav button{
+    width:24px; height:24px; border-radius:6px; border:1px solid var(--line); background:#1a1b1e;
+    color:var(--ink); font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .toc-search-nav button:hover{ background:#2c2d30; }
+  .toc-search-nav button:disabled{ opacity:.4; cursor:default; }
+
+  mark.search-hit{ background:#fdd663; color:#131417; padding:0 2px; border-radius:3px; }
+  mark.search-hit.active{ background:#ff9d45; box-shadow:0 0 0 2px rgba(255,157,69,.35); }
+
+  .section{ background:var(--paper); border-radius:18px; box-shadow:var(--card-shadow); padding:34px 38px; margin-bottom:26px; scroll-margin-top:84px; position:sticky; }
+  .section .kicker{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+  .kicker-left{ display:flex; align-items:center; gap:10px; }
+  .num-badge{ width:30px;height:30px;border-radius:9px; display:flex;align-items:center;justify-content:center; color:#fff; font-weight:700; font-size:14px; font-family:'Google Sans',sans-serif; flex:none; line-height:1; }
+  .section h2{font-size:23px; margin:0; font-weight:700; line-height:1.25;}
+  .section p{color:#c7cbd1; font-size:15px; margin:0 0 14px;}
+  .section p:last-child{margin-bottom:0;}
+  .lede{font-size:15.5px; color:#c7cbd1;}
+  .subhead{ font-family:'Google Sans',sans-serif; font-size:15px; font-weight:700; color:#e8eaed; margin:26px 0 10px; display:flex; align-items:center; gap:10px; }
+  .subhead:first-of-type{margin-top:6px;}
+  .subhead .sub-dot{ width:8px; height:8px; border-radius:50%; flex:none; }
+
+  /* ===== Collapse / expand accordion (exam, SOC, Cloud, glossary, comparison, vocab) ===== */
+  .section.collapsible .kicker{ cursor:pointer; user-select:none; }
+  .collapse-toggle{
+    display:flex; align-items:center; justify-content:center; flex:none;
+    width:32px; height:32px; border-radius:9px; border:1px solid var(--line);
+    background:#1a1b1e; color:var(--sub); cursor:pointer; padding:0;
+  }
+  .collapse-toggle:hover{ background:#2c2d30; color:var(--ink); }
+  .collapse-toggle .chevron{ display:inline-block; font-size:13px; transition:transform .25s ease; }
+  .collapse-toggle[aria-expanded="true"] .chevron{ transform:rotate(180deg); }
+  .collapse-body{
+    max-height:0; overflow:hidden; opacity:0;
+    transition:max-height .35s ease, opacity .3s ease;
+  }
+  .collapse-body.open{ opacity:1; }
+
+  .si-toggle{ display:inline-flex; align-items:center; gap:7px; background:#2a2b2e; border:1px solid var(--line); color:#a8c7fa; font-family:'Roboto',sans-serif; font-weight:500; font-size:12.5px; padding:7px 13px; border-radius:20px; cursor:pointer; white-space:nowrap; transition:background .15s ease, border-color .15s ease; }
+  .si-divider{ display:flex; align-items:center; gap:14px; margin:26px 0 0; }
+  .si-divider::before, .si-divider::after{ content:''; flex:1; height:1px; background:var(--line); }
+  .si-toggle:hover{ background:#33343a; border-color:#5f6368; }
+  .si-toggle .flag{ font-size:13px; }
+  .si-toggle .arrow{ display:inline-block; transition:transform .2s ease; font-size:10px; }
+  .si-toggle[aria-expanded="true"] .arrow{ transform:rotate(180deg); }
+  .si-panel{ display:none; background:#1c2b22; border:1px solid #2f5b41; border-left:4px solid var(--green); border-radius:10px; padding:16px 20px; margin-top:14px; font-size:14.5px; color:#d3e9db; }
+  .si-panel.open{ display:block; animation:fadeSlide .18s ease; }
+  .si-panel p{ color:#d3e9db; font-size:14.5px; margin:0 0 10px; }
+  .si-panel p:last-child{ margin-bottom:0; }
+  .si-panel .si-label{ font-family:'Roboto',sans-serif; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:#7cc99a; font-weight:700; margin-bottom:8px; display:block; }
+  @keyframes fadeSlide{ from{opacity:0; transform:translateY(-4px);} to{opacity:1; transform:translateY(0);} }
+
+  .slide{ background:var(--paper); border:1px solid var(--line); border-radius:12px; padding:24px 26px; margin:18px 0; position:relative; }
+  .slide::before{ content:"SLIDE"; position:absolute; top:10px; right:14px; font-size:9px; letter-spacing:.12em; color:#5f6368; font-weight:700; }
+  .slide .slide-title{ color:var(--blue); font-size:19px; font-weight:700; margin:0 0 12px; }
+  .slide ul{margin:0; padding-left:20px;}
+  .slide li{margin-bottom:8px; font-size:14.5px; color:#c7cbd1;}
+  .slide li::marker{color:var(--blue);}
+  .slide.def p{font-size:15px; color:#c7cbd1; margin:0;}
+  .slide-row{display:grid; gap:16px;}
+  .cols-2{grid-template-columns:1fr 1fr;}
+  .cols-3{grid-template-columns:1fr 1fr 1fr;}
+  .slide.accent-blue .slide-title{color:var(--blue);}
+  .slide.accent-red .slide-title{color:var(--red);}
+  .slide.accent-yellow .slide-title{color:#fdd663;}
+  .slide.accent-green .slide-title{color:var(--green);}
+  .slide.accent-purple .slide-title{color:var(--purple);}
+
+  .term{ font-family:'Roboto Mono', monospace; background:#2c2d30; color:#a8c7fa; padding:1px 6px; border-radius:5px; font-size:.92em; }
+
+  .figure{ margin:18px 0; border-radius:14px; overflow:hidden; border:1px solid var(--line); background:#000; }
+  .figure img{ display:block; width:100%; }
+  .figure figcaption{ padding:10px 16px; font-size:12.5px; color:var(--sub); background:#1a1b1e; border-top:1px solid var(--line); }
+  .figure-row{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:18px 0; }
+  .figure-row .figure{ margin:0; }
+
+  .callout{ background:#22344d; border-left:4px solid var(--blue); border-radius:10px; padding:14px 18px; font-size:14px; color:#a8c7fa; margin:16px 0; }
+  .callout.soc{ background:#3a2530; border-left-color:var(--red); color:#f3b8c2; }
+  .callout.cloud{ background:#1c2b3e; border-left-color:var(--purple); color:#d8c4fb; }
+
+  .purpose-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin:18px 0 4px; }
+  .purpose-card{ border-radius:14px; padding:16px 14px; color:#fff; min-height:96px; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 2px 6px rgba(0,0,0,.12); }
+  .purpose-card .p-name{font-family:'Google Sans',sans-serif; font-weight:700; font-size:14.5px;}
+  .purpose-card .p-focus{font-size:11.5px; opacity:.92; margin-top:6px;}
+  .p1{background:#4285F4;} .p2{background:#34A853;} .p3{background:#F09300;} .p4{background:#7B61FF;}
+
+  .glossary{display:grid; grid-template-columns:1fr 1fr; gap:0 30px;}
+  .g-item{padding:12px 0; border-bottom:1px solid var(--line);}
+  .g-item dt{font-family:'Google Sans',sans-serif; font-weight:700; font-size:14px; color:#a8c7fa;}
+  .g-item dd{margin:4px 0 0; font-size:13.5px; color:#c7cbd1;}
+
+  /* ===== Sinhala Vocabulary Glossary ===== */
+  .vocab-grid{ display:flex; flex-direction:column; gap:22px; margin-top:6px; }
+  .vocab-card{ background:#1a1b1e; border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+  .vocab-header{ display:flex; align-items:center; gap:14px; padding:18px 22px 14px; border-bottom:1px solid var(--line); background:#202124; }
+  .vocab-word{ font-family:'Google Sans',sans-serif; font-size:21px; font-weight:700; color:#a8c7fa; }
+  .vocab-pos{ font-size:12px; color:var(--sub); font-style:italic; background:#2c2d30; padding:3px 9px; border-radius:20px; margin-left:4px; align-self:center; }
+  .vocab-body{ padding:16px 22px; }
+  .vocab-meanings{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+  .vocab-en{ background:#1c2b3e; border-left:3px solid var(--blue); border-radius:8px; padding:12px 14px; }
+  .vocab-si{ background:#1c2b22; border-left:3px solid var(--green); border-radius:8px; padding:12px 14px; }
+  .vocab-lang-label{ font-size:10px; letter-spacing:.12em; text-transform:uppercase; font-weight:700; margin-bottom:6px; display:block; }
+  .vocab-en .vocab-lang-label{ color:#5b9cf8; }
+  .vocab-si .vocab-lang-label{ color:#7cc99a; }
+  .vocab-en p{ color:#a8c7fa; font-size:13.5px; margin:0; line-height:1.55; }
+  .vocab-si p{ color:#d3e9db; font-size:14.5px; margin:0; line-height:1.6; font-family:'Noto Sans Sinhala','Roboto',sans-serif; }
+  .vocab-sentences-head{ font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--sub); font-weight:700; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+  .vocab-sentences-head::after{ content:''; flex:1; height:1px; background:var(--line); }
+  .vocab-sentences{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:7px; }
+  .vocab-sentences li{ display:flex; gap:10px; align-items:flex-start; font-size:13.5px; color:#c7cbd1; line-height:1.55; }
+  .vocab-tag{ flex:none; font-size:9.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; padding:2px 7px; border-radius:12px; margin-top:2px; white-space:nowrap; }
+  .tag-daily{ background:#2a2b2e; color:#9aa0a6; }
+  .tag-cyber{ background:#3a2530; color:#f3b8c2; }
+  .tag-net{ background:#1c2b3e; color:#a8c7fa; }
+  .tag-hw{ background:#2b2510; color:#fdd663; }
+  .tag-sw{ background:#1c2b22; color:#81c995; }
+  .vocab-hl{ color:#fff; font-weight:600; }
+
+  .exam-list{ list-style:none; margin:0; padding:0; }
+  .exam-list li{ display:flex; gap:12px; align-items:flex-start; padding:12px 4px; border-bottom:1px solid var(--line); font-size:14.5px; color:#dfe1e5; }
+  .exam-list li:last-child{ border-bottom:none; }
+  .exam-list .chk{ flex:none; width:20px; height:20px; border-radius:6px; border:2px solid var(--yellow); margin-top:2px; }
+  .exam-list b{ color:#fff; }
+
+  .role-card{ border:1px solid var(--line); border-radius:14px; padding:20px 22px; margin-bottom:16px; background:#1a1b1e; }
+  .role-card:last-child{ margin-bottom:0; }
+  .role-card .role-title{ display:flex; align-items:center; gap:10px; font-family:'Google Sans',sans-serif; font-weight:700; font-size:15.5px; margin-bottom:8px; }
+  .role-card .role-title .ico{ width:26px; height:26px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:13px; flex:none; color:#fff; }
+  .role-card p{ font-size:14.5px; color:#c7cbd1; margin:0; }
+
+  table.gtable{ width:100%; border-collapse:collapse; margin-top:6px; font-size:14px; min-width:480px; }
+  table.gtable th{ text-align:left; font-family:'Google Sans',sans-serif; font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--sub); padding:10px 14px; border-bottom:2px solid var(--line); }
+  table.gtable td{ padding:12px 14px; border-bottom:1px solid var(--line); color:#dfe1e5; vertical-align:top; }
+  table.gtable tr:last-child td{ border-bottom:none; }
+  table.gtable td.acr{ font-family:'Roboto Mono',monospace; color:var(--blue); font-weight:700; white-space:nowrap; }
+  table.gtable td.term-full{ font-weight:600; color:#fff; white-space:nowrap; }
+
+  .table-wrap{ overflow-x:auto; margin:8px 0 4px; border:1px solid var(--line); border-radius:12px; }
+  table.ctable{ width:100%; border-collapse:collapse; font-size:13.5px; min-width:560px; }
+  table.ctable th{ background:#1a1b1e; text-align:left; font-family:'Google Sans',sans-serif; font-size:12px; color:#a8c7fa; padding:12px 14px; border-bottom:1px solid var(--line); white-space:nowrap; }
+  table.ctable td{ padding:12px 14px; border-bottom:1px solid var(--line); color:#c7cbd1; }
+  table.ctable tr:last-child td{ border-bottom:none; }
+  table.ctable td.row-head{ font-weight:700; color:#fff; white-space:nowrap; }
+  table.ctable tr:hover td{ background:#1e1f22; }
+
+  footer{ text-align:center; color:var(--sub); font-size:12.5px; padding:20px 0 50px; }
+  .back-top{ display:inline-block; margin-top:10px; font-size:12px; color:var(--blue); text-decoration:none; }
+
+  .bottom-nav{ max-width:1180px; margin:0 auto 40px; padding:0 24px; display:grid; grid-template-columns:1fr auto 1fr; gap:12px; }
+  .bottom-nav .path-btn{ color:var(--ink); background:var(--paper); border:1px solid var(--line); }
+  .bottom-nav .path-btn:hover{ background:#2c2d30; }
+  .bottom-nav .path-btn.index{ background:#1a2a45; border-color:#2a3a55; }
+
+  @media (max-width:900px){
+    .hero{padding:40px 20px 30px;} .hero h1{font-size:27px;} .hero p.lead{font-size:15px;}
+    .hero-search-row{ display:block; }
+    .hero-find-col{ margin-top:10px; }
+    .path-nav{grid-template-columns:1fr; }
+    .path-btn.prev, .path-btn.next{ justify-content:center; text-align:center; }
+    .path-btn.prev .p-text, .path-btn.next .p-text{ align-items:center; }
+    .layout{margin-top:8px; grid-template-columns:1fr; gap:0; padding:0 16px;}
+    nav.toc{display:none;}
+    .section{padding:26px 22px; border-radius:16px;}
+    .cols-3{grid-template-columns:1fr 1fr;}
+    .purpose-grid{grid-template-columns:repeat(2,1fr);}
+    .glossary{grid-template-columns:1fr;}
+    .figure-row{grid-template-columns:1fr;}
+    .mobile-bar{display:flex;}
+    .bottom-nav{grid-template-columns:1fr;}
+  }
+  @media (max-width:560px){
+    .hero{padding:32px 18px 26px;} .hero h1{font-size:22px;} .hero p.lead{font-size:14px;}
+    .eyebrow{font-size:10.5px; padding:5px 10px; margin-bottom:14px;}
+    .hero-meta{flex-direction:column; gap:8px; font-size:12px;}
+    .layout{padding:0 12px;}
+    .section{padding:20px 16px; margin-bottom:16px;}
+    .section h2{font-size:18px;}
+    .section .kicker{gap:8px;}
+    .num-badge{width:26px;height:26px;font-size:12px;border-radius:8px;}
+    .slide{padding:18px 16px;}
+    .slide .slide-title{font-size:16.5px;}
+    .cols-2,.cols-3{grid-template-columns:1fr;}
+    .purpose-grid{grid-template-columns:1fr 1fr; gap:10px;}
+    .purpose-card{padding:12px 10px; min-height:84px;}
+    .role-card{padding:16px 16px;}
+    .role-card .role-title{font-size:14.5px;}
+    .exam-list li{font-size:14px; padding:11px 2px; gap:10px;}
+    table.gtable, table.ctable{font-size:12.5px;}
+    table.gtable th, table.ctable th{padding:9px 10px;}
+    table.gtable td, table.ctable td{padding:9px 10px;}
+    .subhead{font-size:14px; margin:20px 0 8px;}
+    .callout{padding:12px 14px; font-size:13.5px;}
+  }
+
+  @media (max-width:900px){
+    nav.toc.drawer-open{ display:block; position:fixed; top:0; left:0; bottom:0; z-index:50; width:82%; max-width:320px; max-height:none; border-radius:0; box-shadow:2px 0 24px rgba(0,0,0,.18); padding:18px 8px 24px; animation:slideIn .22s ease; overflow:auto; }
+    nav.toc.drawer-open .toc-head{padding:8px 16px 14px;}
+    nav.toc a{padding:12px 16px; font-size:14.5px;}
+  }
+  @keyframes slideIn{ from{ transform:translateX(-100%); opacity:.4; } to{ transform:translateX(0); opacity:1; } }
+  .drawer-close{ display:none; width:30px; height:30px; border-radius:8px; border:1px solid var(--line); background:var(--paper); align-items:center; justify-content:center; cursor:pointer; font-size:16px; line-height:1; color:var(--sub); flex:none; }
+  nav.toc.drawer-open .drawer-close{display:flex;}
+  @media (max-width:400px){ nav.toc.drawer-open{width:88%;} }
+
+/* ===== Image lightbox (click to enlarge) ===== */
+.figure img{ cursor:zoom-in; }
+.lb-overlay{ position:fixed; inset:0; z-index:1000; display:none; align-items:center; justify-content:center; flex-direction:column; gap:12px; background:rgba(10,11,13,.92); padding:24px; cursor:zoom-out; }
+.lb-overlay.open{ display:flex; animation:lbFade .18s ease; }
+.lb-overlay img{ max-width:96vw; max-height:84vh; object-fit:contain; border-radius:10px; box-shadow:0 8px 40px rgba(0,0,0,.6); background:#fff; animation:lbZoom .2s ease; }
+.lb-caption{ color:#c7cbd1; font-size:13.5px; text-align:center; max-width:90vw; }
+.lb-close{ position:fixed; top:14px; right:16px; width:40px; height:40px; border-radius:50%; border:1px solid #5f6368; background:#2a2b2e; color:#e8eaed; font-size:22px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.lb-close:hover{ background:#3c4043; }
+.lb-nav{ position:fixed; top:50%; transform:translateY(-50%); width:48px; height:48px; border-radius:50%; border:1px solid #5f6368; background:rgba(42,43,46,.92); color:#e8eaed; font-size:26px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:2; padding:0 0 3px; }
+.lb-nav:hover{ background:#3c4043; }
+.lb-prev{ left:14px; } .lb-next{ right:14px; }
+.lb-count{ color:#9aa0a6; font-size:12.5px; letter-spacing:.04em; }
+@media (max-width:700px){
+  .lb-overlay{ padding:16px 12px 92px; }
+  .lb-overlay img{ max-height:68vh; }
+  .lb-nav{ top:auto; bottom:22px; transform:none; width:46px; height:46px; font-size:24px; }
+  .lb-prev{ left:calc(50% - 92px); right:auto; }
+  .lb-next{ right:calc(50% - 92px); left:auto; }
+  .lb-count{ position:fixed; bottom:34px; left:50%; transform:translateX(-50%); font-size:13px; }
+}
+@keyframes lbFade{ from{opacity:0;} to{opacity:1;} }
+@keyframes lbZoom{ from{transform:scale(.94);} to{transform:scale(1);} }
+
+
+/* ===== Lab guide additions ===== */
+pre.code{ position:relative; background:#0f1012; border:1px solid var(--line); border-left:4px solid var(--blue); border-radius:10px; padding:14px 64px 14px 16px; margin:12px 0 16px; overflow-x:auto; font-family:'Roboto Mono',monospace; font-size:13px; line-height:1.6; color:#d7dce2; white-space:pre; tab-size:2; }
+pre.code code{ font-family:inherit; font-size:inherit; background:none; padding:0; color:inherit; }
+.copy-btn{ position:absolute; top:8px; right:8px; padding:4px 10px; font-size:11.5px; font-family:'Roboto',sans-serif; color:var(--sub); background:#1a1b1e; border:1px solid var(--line); border-radius:7px; cursor:pointer; }
+.copy-btn:hover{ background:#2c2d30; color:var(--ink); }
+.copy-btn.done{ color:var(--green); border-color:#2f5b41; }
+.callout.warn{ background:#3a3320; border-left-color:var(--yellow); color:#fdd663; }
+.shot{ border:2px dashed #4a4d52; border-radius:12px; padding:20px 18px; margin:18px 0; text-align:center; color:var(--sub); background:#1a1b1e; font-size:13.5px; }
+.shot b{ color:#c7cbd1; }
+ol.step-list{ counter-reset:step; list-style:none; margin:12px 0 6px; padding:0; }
+ol.step-list > li{ counter-increment:step; position:relative; padding:14px 16px 14px 56px; border:1px solid var(--line); border-radius:12px; margin-bottom:10px; background:#1a1b1e; font-size:14.5px; color:#c7cbd1; }
+ol.step-list > li::before{ content:counter(step); position:absolute; left:15px; top:14px; width:28px; height:28px; border-radius:50%; background:#1a73e8; color:#fff; display:flex; align-items:center; justify-content:center; font-family:'Google Sans',sans-serif; font-weight:700; font-size:13px; }
+ol.step-list > li b{ color:#fff; }
+ol.step-list pre.code{ margin:10px 0 2px; }
+.section p code, .term{ word-break:break-word; }
+@media (max-width:560px){
+  pre.code{ font-size:12px; padding:12px 12px; }
+  .copy-btn{ position:static; display:block; margin:0 0 8px auto; }
+  ol.step-list > li{ padding:12px 12px 12px 48px; }
+  ol.step-list > li::before{ left:12px; top:12px; width:26px; height:26px; }
+}
+
+/* ===== Snapshot checkpoint callouts ===== */
+.callout.snap{ background:#1b2f27; border-left-color:var(--green); color:#cfe9d9; }
+.callout.snap b{ color:#eaf7ef; }
+.callout.snap .term{ background:#24463a; color:#b9f0cf; }
+.callout.snap .snap-link{ color:#81c995; font-size:12.5px; white-space:nowrap; margin-left:4px; }
+
+.path-nav > span:empty, .bottom-nav > span:empty{ display:block; }
+@media (max-width:900px){ .path-nav > span:empty, .bottom-nav > span:empty{ display:none; } }
+
+</style>
+</head>
+<body>
+
+<div class="mobile-bar" id="mobileBar">
+  <span class="m-title">Lab 00 · Lab Environment Overview</span>
+  <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="toc" aria-label="Open section menu">
+    <span></span>
+  </button>
+</div>
+<div class="toc-backdrop" id="tocBackdrop"></div>
+
+<div class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow">Lab 00 · Read this first</span>
+    <h1>Lab Environment Overview</h1>
+    <p class="lead">The map of your SOC home lab: which VMs exist, how they are networked, how much RAM and disk each lab needs, how snapshots are named, what to check before you start, and the safety rules that apply to every lab. Every later guide assumes this page. Tap "සිංහල" on any section for a Sinhala summary.</p>
+    <div class="hero-meta">
+      <span><span class="dot"></span> Reading time: about 15 minutes</span>
+      <span><span class="dot"></span> Host: Windows 11 laptop · 16 GB RAM · VirtualBox</span>
+      <span><span class="dot"></span> Used by: Labs 01–06</span>
+    </div>
+
+    <div class="hero-search-row">
+      <div class="site-search" id="siteSearch">
+        <span class="s-icon">🔍</span>
+        <input type="text" id="topicJump" placeholder="Search labs… e.g. Wazuh, pfSense, phishing, PCAP" autocomplete="off">
+        <button class="s-clear" id="jumpClear" aria-label="Clear search">✕</button>
+        <div class="s-dropdown" id="jumpDropdown"></div>
+      </div>
+
+      <div class="hero-find-col">
+        <div class="site-search find-page-search" id="heroFindWrap">
+          <span class="s-icon">🔎</span>
+          <input type="text" id="heroFindInput" placeholder="Find on this page…" autocomplete="off">
+          <button class="s-clear" id="heroFindClear" aria-label="Clear search">✕</button>
+        </div>
+        <div class="find-page-nav" id="heroFindNav">
+          <span id="heroSearchCount">0 / 0</span>
+          <div class="snav-btns">
+            <button id="heroSearchPrev" type="button" aria-label="Previous match" disabled>‹</button>
+            <button id="heroSearchNext" type="button" aria-label="Next match" disabled>›</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="path-nav">
+      <span></span>
+      <a class="path-btn index" href="labs-index.html">
+        <span class="p-text"><span class="p-kicker">All labs</span><span class="p-title">🏠 Labs Index</span></span>
+      </a>
+      <a class="path-btn next" href="lab-01-wazuh-siem-windows-detections.html">
+        <span class="p-text"><span class="p-kicker">Next · 01</span><span class="p-title">Wazuh SIEM + Windows Detections</span></span>
+        <span class="p-arrow">→</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+  <nav class="toc" id="toc">
+    <div class="toc-head">On this page <button class="drawer-close" id="drawerClose" aria-label="Close menu">✕</button></div>
+
+    <div class="toc-search">
+      <div class="toc-search-box">
+        <span class="s-icon">🔍</span>
+        <input type="text" id="pageSearchInput" placeholder="Find on this page…" autocomplete="off">
+        <button class="s-clear" id="pageSearchClear" aria-label="Clear search">✕</button>
+      </div>
+      <div class="toc-search-nav" id="searchNav">
+        <span id="searchCount">0 / 0</span>
+        <div class="snav-btns">
+          <button id="searchPrev" aria-label="Previous match" disabled>‹</button>
+          <button id="searchNext" aria-label="Next match" disabled>›</button>
+        </div>
+      </div>
+    </div>
+
+    <a href="#overview">1. Overview &amp; goals</a>
+    <a href="#architecture">2. Lab architecture</a>
+    <a href="#inventory">3. VM inventory</a>
+    <a href="#network">4. Network &amp; IP plan</a>
+    <a href="#resources">5. RAM &amp; disk plan</a>
+    <a href="#conventions">6. Snapshots, names &amp; folders</a>
+    <a href="#preflight">7. Pre-flight checklist</a>
+    <a href="#safety">8. Safety &amp; publishing rules</a>
+    <a href="#roadmap">9. Lab roadmap</a>
+    <div class="toc-divider">Beyond the overview</div>
+    <a href="#exam">Interview &amp; Cert Takeaways</a>
+    <a href="#soc">SOC Analyst — Real-World Relevance</a>
+    <a href="#cloud">Cloud Security Engineer — Real-World Relevance</a>
+    <a href="#glossary">Glossary — Acronyms &amp; Meanings</a>
+    <a href="#comparison">Comparison Tables</a>
+    <a href="#sinhala-vocab">🇱🇰 Sinhala Vocabulary</a>
+  </nav>
+
+  <main>
+
+    <!-- ================= 1. OVERVIEW ================= -->
+    <section class="section" id="overview">
+      <div class="kicker">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--blue)">1</div><h2>Overview &amp; goals</h2></div>
+      </div>
+      <p class="lede">A home lab is a small, safe copy of a company network. You build it once, then reuse it in every lab to attack, defend and investigate without risking real systems. This page documents that environment so each lab guide can say "start the VMs listed in the plan" instead of repeating setup.</p>
+
+      <div class="purpose-grid">
+        <div class="purpose-card p1"><div class="p-name">Isolated</div><div class="p-focus">Attacks never leave the lab network</div></div>
+        <div class="purpose-card p2"><div class="p-name">Repeatable</div><div class="p-focus">Snapshots let you reset in seconds</div></div>
+        <div class="purpose-card p3"><div class="p-name">Lightweight</div><div class="p-focus">Fits a 16 GB laptop</div></div>
+        <div class="purpose-card p4"><div class="p-name">Documented</div><div class="p-focus">Every change is written down</div></div>
+      </div>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--blue)"></span>What this page gives you</div>
+      <div class="slide accent-blue">
+        <div class="slide-title">Lab 00 deliverables</div>
+        <ul>
+          <li>A diagram and inventory of every VM in the SOC lab, and which VMs are <i>not</i> part of it.</li>
+          <li>A fixed IP plan for <span class="term">SOC-Lab-Net</span> so addresses never clash.</li>
+          <li>A RAM and disk budget for each of the six labs.</li>
+          <li>Naming rules for snapshots and folders.</li>
+          <li>A pre-flight checklist and a verification script you run before starting any lab.</li>
+          <li>Safety and publishing rules, so nothing risky or private reaches your website.</li>
+        </ul>
+      </div>
+
+      <div class="si-divider"><button class="si-toggle" data-target="si-overview" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-overview">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        
+        <p class="si"><b>Home lab යනු:</b> සැබෑ ආයතනික ජාලයක කුඩා, ආරක්ෂිත පිටපතකි — එක් වරක් ගොඩනඟා සෑම lab එකකදීම නැවත භාවිත කර, සැබෑ පද්ධතිවලට අවදානමක් නොමැතිව ප්‍රහාර, ආරක්ෂණ සහ විමර්ශන කළ හැක. මෙම පිටුව එම පරිසරය ලේඛනගත කරන බැවින් සෑම lab guide එකක්ම සැකසුම් නැවත විස්තර නොකර මෙයට යොමු වේ.</p>
+        <p class="si"><b>ගුණාංග හතර:</b> හුදකලා (ප්‍රහාර lab ජාලයෙන් පිටතට නොයයි); නැවත කළ හැකි (snapshots මගින් තත්පර කිහිපයකින් reset); සැහැල්ලු (16 GB laptop එකකට ගැළපේ); ලේඛනගත (සෑම වෙනසක්ම ලියා ඇත).</p>
+        <p class="si"><b>මෙම පිටුවෙන් ලැබෙන දේ:</b> සියලුම SOC lab VM වල රූප සටහන සහ ලැයිස්තුව (lab එකට අයත් නොවන ඒවා ද); SOC-Lab-Net සඳහා IP සැලැස්ම; lab හයට RAM සහ තැටි අයවැය; snapshot සහ ෆෝල්ඩර නම් කිරීමේ නීති; ආරම්භයට පෙර පරීක්ෂා ලැයිස්තුව සහ සත්‍යාපන විධාන; ආරක්ෂක සහ ප්‍රකාශන නීති.</p>
+      </div>
+    </section>
+
+    <!-- ================= 2. ARCHITECTURE ================= -->
+    <section class="section" id="architecture">
+      <div class="kicker">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--green)">2</div><h2>Lab architecture</h2></div>
+      </div>
+      <p class="lede">All lab VMs sit on one isolated virtual network called <span class="term">SOC-Lab-Net</span>. The pfSense firewall is the gateway between that network and the internet. Lab 01 is the exception: it runs without pfSense, using fixed addresses.</p>
+
+      <svg viewBox="0 0 760 340" role="img" aria-label="SOC home lab architecture diagram" style="width:100%;height:auto;display:block;background:#1a1b1e;border:1px solid #3c4043;border-radius:12px;font-family:'Roboto',Arial,sans-serif">
+        <defs><marker id="ah0" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8ab4f8"/></marker></defs>
+
+        <rect x="270" y="12" width="220" height="38" rx="10" fill="#22344d" stroke="#8ab4f8"/>
+        <text x="380" y="36" text-anchor="middle" fill="#a8c7fa" font-size="14" font-weight="700">Internet (via host NAT)</text>
+        <line x1="380" y1="50" x2="380" y2="80" stroke="#8ab4f8" stroke-width="2" marker-end="url(#ah0)"/>
+
+        <rect x="250" y="82" width="260" height="62" rx="12" fill="#3a2530" stroke="#f28b82"/>
+        <text x="380" y="108" text-anchor="middle" fill="#f28b82" font-size="15" font-weight="700">pfSense-FW</text>
+        <text x="380" y="128" text-anchor="middle" fill="#c7cbd1" font-size="12">WAN: NAT · LAN: 192.168.1.1</text>
+        <line x1="380" y1="144" x2="380" y2="176" stroke="#8ab4f8" stroke-width="2"/>
+
+        <rect x="30" y="176" width="700" height="26" rx="8" fill="#232427" stroke="#8ab4f8"/>
+        <text x="380" y="194" text-anchor="middle" fill="#a8c7fa" font-size="12.5" font-weight="700">SOC-Lab-Net — internal network · 192.168.1.0/24</text>
+
+        <line x1="102" y1="202" x2="102" y2="226" stroke="#5f6368"/>
+        <line x1="287" y1="202" x2="287" y2="226" stroke="#5f6368"/>
+        <line x1="472" y1="202" x2="472" y2="226" stroke="#5f6368"/>
+        <line x1="657" y1="202" x2="657" y2="226" stroke="#5f6368"/>
+
+        <rect x="30" y="226" width="145" height="64" rx="10" fill="#3a2530" stroke="#f28b82"/>
+        <text x="102" y="250" text-anchor="middle" fill="#f28b82" font-size="13" font-weight="700">Kali-Attacker</text>
+        <text x="102" y="268" text-anchor="middle" fill="#c7cbd1" font-size="11.5">192.168.1.10</text>
+        <text x="102" y="282" text-anchor="middle" fill="#9aa0a6" font-size="10.5">attack tools</text>
+
+        <rect x="215" y="226" width="145" height="64" rx="10" fill="#1c2b22" stroke="#81c995"/>
+        <text x="287" y="250" text-anchor="middle" fill="#81c995" font-size="13" font-weight="700">Wazuh-Server</text>
+        <text x="287" y="268" text-anchor="middle" fill="#c7cbd1" font-size="11.5">192.168.1.20</text>
+        <text x="287" y="282" text-anchor="middle" fill="#9aa0a6" font-size="10.5">SIEM · from Lab 01</text>
+
+        <rect x="400" y="226" width="145" height="64" rx="10" fill="#2b2510" stroke="#fdd663"/>
+        <text x="472" y="250" text-anchor="middle" fill="#fdd663" font-size="13" font-weight="700">Win-Victim</text>
+        <text x="472" y="268" text-anchor="middle" fill="#c7cbd1" font-size="11.5">192.168.1.30</text>
+        <text x="472" y="282" text-anchor="middle" fill="#9aa0a6" font-size="10.5">Windows 11 endpoint</text>
+
+        <rect x="585" y="226" width="145" height="64" rx="10" fill="#1c2b3e" stroke="#c58af9"/>
+        <text x="657" y="250" text-anchor="middle" fill="#c58af9" font-size="13" font-weight="700">Ubuntu-Server-Lab</text>
+        <text x="657" y="268" text-anchor="middle" fill="#c7cbd1" font-size="11.5">DHCP (.100–.199)</text>
+        <text x="657" y="282" text-anchor="middle" fill="#9aa0a6" font-size="10.5">Docker workloads</text>
+
+        <text x="380" y="316" text-anchor="middle" fill="#9aa0a6" font-size="11.5">Wazuh-Server and Win-Victim also have a NAT adapter for installers and updates. No lab VM uses a bridged adapter.</text>
+      </svg>
+
+      <div class="callout">The Windows host sits outside this diagram. It reaches the Wazuh dashboard only through a VirtualBox port-forward (host <span class="term">127.0.0.1:8443</span>), so the dashboard is never exposed to your home network.</div>
+
+      <div class="si-divider"><button class="si-toggle" data-target="si-architecture" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-architecture">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        
+        <p class="si"><b>ජාලය:</b> සියලුම lab VM SOC-Lab-Net නම් හුදකලා අභ්‍යන්තර ජාලයේ (192.168.1.0/24) පිහිටයි. pfSense-FW (WAN: NAT, LAN: 192.168.1.1) මෙම ජාලය සහ අන්තර්ජාලය අතර ද්වාරය (gateway) වේ.</p>
+        <p class="si"><b>ජාලයේ ඇති VM:</b> Kali-Attacker (.10, ප්‍රහාරක මෙවලම්); Wazuh-Server (.20, SIEM — Lab 01 සිට); Win-Victim (.30, Windows 11 endpoint); Ubuntu-Server-Lab (DHCP .100–.199, Docker workloads).</p>
+        <p class="si"><b>වැදගත් කරුණු:</b> Wazuh-Server සහ Win-Victim ට ස්ථාපක හා යාවත්කාලීන සඳහා NAT ඇඩැප්ටරයක් ද ඇත; කිසිදු lab VM එකක් bridged ඇඩැප්ටරයක් භාවිත නොකරයි. Lab 01 pfSense නොමැතිව static IP වලින් ක්‍රියා කරයි. Windows host එක රූප සටහනෙන් පිටත වන අතර Wazuh dashboard වෙත පිවිසෙන්නේ 127.0.0.1:8443 port-forward එක හරහා පමණි — එබැවින් dashboard එක ඔබේ ගෘහ ජාලයට නිරාවරණය නොවේ.</p>
+      </div>
+    </section>
+
+    <!-- ================= 3. INVENTORY ================= -->
+    <section class="section" id="inventory">
+      <div class="kicker">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--red)">3</div><h2>VM inventory</h2></div>
+      </div>
+      <p class="lede">Two groups: the VMs that make up the SOC lab, and the VMs that live in the same VirtualBox but belong to your university and certification study.</p>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--green)"></span>SOC lab VMs</div>
+      <div class="table-wrap"><table class="ctable">
+        <thead><tr><th>VM</th><th>OS / role</th><th>RAM now</th><th>Disk (used / max)</th><th>Snapshot(s)</th></tr></thead>
+        <tbody>
+          <tr><td class="row-head">pfSense-FW</td><td>FreeBSD · firewall and DHCP server for SOC-Lab-Net</td><td>2048 MB (can drop to 1024)</td><td>2.2 / 10 GB</td><td>01-Clean-Base</td></tr>
+          <tr><td class="row-head">Kali-Attacker</td><td>Kali Linux (Xfce) · attack tools</td><td>3072 MB (2048 is enough)</td><td>27.1 / 30 GB</td><td>02-SOC-Net-Verified</td></tr>
+          <tr><td class="row-head">Ubuntu-Server-Lab</td><td>Ubuntu 25.04 server · Docker host</td><td>2048 MB</td><td>6.6 / 20 GB</td><td>02-SOC-Net-Verified</td></tr>
+          <tr><td class="row-head">Win-Victim</td><td>Windows 11 · monitored endpoint</td><td>4096 MB</td><td>17.8 / 60 GB</td><td>01-Clean-Base</td></tr>
+          <tr><td class="row-head">Wazuh-Server <i>(new in Lab 01)</i></td><td>Ubuntu Server 24.04 LTS · SIEM</td><td>4096 MB</td><td>about 12–15 / 30 GB</td><td>created in Lab 01</td></tr>
+        </tbody>
+      </table></div>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--yellow)"></span>Not part of the SOC lab — keep powered off during labs</div>
+      <div class="table-wrap"><table class="ctable">
+        <thead><tr><th>VM</th><th>Used for</th><th>Network</th></tr></thead>
+        <tbody>
+          <tr><td class="row-head">Uni_Linux</td><td>University coursework</td><td>—</td></tr>
+          <tr><td class="row-head">LinuxPlus-Practice</td><td>Linux+ certification practice</td><td>NAT + Host-only</td></tr>
+          <tr><td class="row-head">LinuxPlus-Rocky</td><td>Linux+ certification practice (Rocky Linux)</td><td>NAT + Host-only</td></tr>
+        </tbody>
+      </table></div>
+      <p>These three were moved to the C: drive to free space on D:. They use a separate <b>host-only</b> network, so they cannot reach SOC-Lab-Net.</p>
+
+      <div class="callout warn"><b>Ubuntu 25.04 is end of life.</b> Ubuntu-Server-Lab (and LinuxPlus-Practice) run a release that stopped receiving updates in January 2026, so <span class="term">apt</span> will eventually fail on them. Use Ubuntu-Server-Lab only for Docker workloads (images come from Docker Hub, not apt), or rebuild it on Ubuntu 24.04 LTS. Wazuh itself goes on a fresh 24.04 VM because its installer officially supports Ubuntu only up to 24.04.</div>
+
+      <div class="si-divider"><button class="si-toggle" data-target="si-inventory" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-inventory">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        
+        <p class="si"><b>SOC lab VM:</b> pfSense-FW (FreeBSD; firewall සහ DHCP; RAM 2 GB, 1 GB දක්වා අඩු කළ හැක). Kali-Attacker (Kali Linux; ප්‍රහාරක මෙවලම්; 3 GB, 2 GB ප්‍රමාණවත්). Ubuntu-Server-Lab (Ubuntu 25.04; Docker host; 2 GB). Win-Victim (Windows 11; 4 GB). Wazuh-Server (Ubuntu 24.04 LTS; SIEM; 4 GB; Lab 01 හිදී සාදයි).</p>
+        <p class="si"><b>SOC lab එකට අයත් නොවන VM:</b> Uni_Linux, LinuxPlus-Practice, LinuxPlus-Rocky (විශ්වවිද්‍යාල සහ Linux+ අධ්‍යයනයට). Lab වලදී ඒවා ක්‍රියා විරහිතව තබන්න. ඒවා වෙනම host-only ජාලයක ඇති නිසා SOC-Lab-Net වෙත ළඟා විය නොහැක; D: හි ඉඩ සඳහා C: වෙත ගෙන ගොස් ඇත.</p>
+        <p class="si"><b>Ubuntu 25.04 අවවාදය:</b> Ubuntu 25.04 හි සහාය 2026 ජනවාරියේ අවසන් වූ බැවින් Ubuntu-Server-Lab හි apt අවසානයේ අසාර්ථක වේ — එය Docker workloads සඳහා පමණක් භාවිත කරන්න (images ලැබෙන්නේ Docker Hub එකෙන්) හෝ 24.04 LTS මත නැවත සාදන්න. Wazuh ස්ථාපකය නිල වශයෙන් සහාය දක්වන්නේ Ubuntu 24.04 දක්වා නිසා Wazuh සඳහා නව 24.04 VM එකක් භාවිත කරයි.</p>
+      </div>
+    </section>
+
+    <!-- ================= 4. NETWORK ================= -->
+    <section class="section" id="network">
+      <div class="kicker">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--yellow)">4</div><h2>Network &amp; IP plan</h2></div>
+      </div>
+      <p class="lede">Fixed addresses mean your screenshots, rules and write-ups stay valid across every lab. The network is <span class="term">192.168.1.0/24</span>, which allows 254 hosts.</p>
+
+      <div class="table-wrap"><table class="ctable">
+        <thead><tr><th>Address</th><th>Host</th><th>How assigned</th><th>Set up in</th></tr></thead>
+        <tbody>
+          <tr><td class="row-head">192.168.1.1</td><td>pfSense-FW (LAN gateway)</td><td>Static</td><td>Already done</td></tr>
+          <tr><td class="row-head">192.168.1.10</td><td>Kali-Attacker</td><td>Static</td><td>Already done</td></tr>
+          <tr><td class="row-head">192.168.1.20</td><td>Wazuh-Server</td><td>Static</td><td>Lab 01</td></tr>
+          <tr><td class="row-head">192.168.1.30</td><td>Win-Victim</td><td>Static</td><td>Lab 01</td></tr>
+          <tr><td class="row-head">192.168.1.100–.199</td><td>pfSense DHCP pool (Ubuntu-Server-Lab has received .101)</td><td>DHCP</td><td>Already done</td></tr>
+        </tbody>
+      </table></div>
+      <div class="callout">The static addresses .10, .20 and .30 sit <b>outside</b> the DHCP pool (.100–.199), so pfSense can never hand out an address that is already in use.</div>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--blue)"></span>Network design rules</div>
+      <ol class="step-list">
+        <li><b>Attack and monitored VMs use Internal Network only</b> (name exactly <span class="term">SOC-Lab-Net</span>, case-sensitive). They cannot see the host, your home network, or each other's NAT.</li>
+        <li><b>Internet access is a separate NAT adapter</b>, used for downloading installers and updates. Never use a bridged adapter on a lab VM.</li>
+        <li><b>Adapter type is Intel PRO/1000 MT Desktop</b> on every VM, matching your existing setup.</li>
+        <li><b>Only the Wazuh dashboard is reachable from the host</b>, through the 8443 → 443 port-forward on the Wazuh-Server's NAT adapter, bound to 127.0.0.1.</li>
+      </ol>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--green)"></span>Connectivity test (from Kali-Attacker)</div>
+      <p>Run this after Lab 01 to confirm the whole network answers. Skip the first line if pfSense is powered off.</p>
+      <pre class="code"><code>ping -c 2 192.168.1.1     # pfSense (skip if powered off)
+ping -c 2 192.168.1.20    # Wazuh-Server
+ping -c 2 192.168.1.30    # Win-Victim</code></pre>
+      <p>Expected: replies from every address that is powered on. If one fails, check that both adapters use the exact network name <span class="term">SOC-Lab-Net</span>.</p>
+
+      <div class="si-divider"><button class="si-toggle" data-target="si-network" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-network">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        
+        <p class="si"><b>IP සැලැස්ම:</b> ජාලය 192.168.1.0/24 (hosts 254ක්). Static: pfSense .1, Kali .10, Wazuh-Server .20 (Lab 01), Win-Victim .30 (Lab 01). pfSense DHCP පරාසය .100–.199 (Ubuntu-Server-Lab ට .101 ලැබී ඇත). Static ලිපින DHCP පරාසයෙන් පිටත බැවින් pfSense දැනටමත් භාවිතයේ ඇති ලිපිනයක් නොදේ.</p>
+        <p class="si"><b>ජාල නීති හතර:</b> (1) ප්‍රහාරක සහ ඉලක්ක VM Internal Network (නම හරියටම SOC-Lab-Net — ලොකු/කුඩා අකුරු වැදගත්) පමණක්. (2) අන්තර්ජාලයට වෙනම NAT ඇඩැප්ටරයක්; bridged කිසිවිටෙක නැත. (3) සියලු VM හි adapter type Intel PRO/1000 MT Desktop. (4) Host එකෙන් ළඟා විය හැක්කේ Wazuh dashboard පමණි (127.0.0.1 වෙත bound 8443 → 443).</p>
+        <p class="si"><b>සම්බන්ධතා පරීක්ෂාව:</b> Kali වලින් ping -c 2 192.168.1.1, 192.168.1.20 සහ 192.168.1.30 ධාවනය කරන්න (pfSense off නම් පළමුවැන්න මඟහරින්න). අසාර්ථක නම් ඇඩැප්ටර දෙකම SOC-Lab-Net නමට හරියටම ගැළපේදැයි බලන්න.</p>
+      </div>
+    </section>
+
+    <!-- ================= 5. RESOURCES ================= -->
+    <section class="section" id="resources">
+      <div class="kicker">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--purple)">5</div><h2>RAM &amp; disk plan</h2></div>
+      </div>
+      <p class="lede">Your laptop has 15.7 GB of usable RAM. Windows and a browser need about 4–5 GB, so you have roughly <b>10–11 GB for VMs</b> at any moment. Plan each lab around that limit.</p>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--blue)"></span>VMs to run in each lab (planned estimates)</div>
+      <div class="table-wrap"><table class="ctable">
+        <thead><tr><th>Lab</th><th>Power on</th><th>RAM total</th><th>Keep off</th></tr></thead>
+        <tbody>
+          <tr><td class="row-head">01 Wazuh + Windows</td><td>Wazuh-Server (4) · Win-Victim (4)</td><td>8 GB</td><td>Everything else</td></tr>
+          <tr><td class="row-head">02 pfSense + Suricata</td><td>pfSense (1) · Wazuh-Server (4) · Win-Victim (4)</td><td>9 GB</td><td>Kali, Ubuntu-Server-Lab</td></tr>
+          <tr><td class="row-head">03 DVWA + WAF</td><td>pfSense (1) · Wazuh-Server (4) · Ubuntu-Server-Lab (2) · Kali (2)</td><td>9 GB</td><td>Win-Victim</td></tr>
+          <tr><td class="row-head">04 Attack simulation</td><td>Wazuh-Server (4) · Win-Victim (4) · Kali (2)</td><td>10 GB — tight</td><td>pfSense, Ubuntu-Server-Lab</td></tr>
+          <tr><td class="row-head">05 Phishing analysis</td><td>One small VM or your host</td><td>2–4 GB</td><td>Most others</td></tr>
+          <tr><td class="row-head">06 PCAP investigation</td><td>Host Wireshark or Kali</td><td>0–2 GB</td><td>Most others</td></tr>
+        </tbody>
+      </table></div>
+      <div class="callout warn">These are planning estimates. Each lab guide confirms its own numbers when it is written. If the laptop slows down, close browser tabs first, then lower Kali to 2 GB and pfSense to 1 GB.</div>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--yellow)"></span>Disk budget</div>
+      <div class="table-wrap"><table class="ctable">
+        <thead><tr><th>Drive</th><th>Free after moving 3 VMs to C:</th><th>Rule</th></tr></thead>
+        <tbody>
+          <tr><td class="row-head">D: (Projects, 150 GB)</td><td>43.6 GB free</td><td>Keep at least <b>10 GB free</b>; VirtualBox slows badly on a full drive</td></tr>
+          <tr><td class="row-head">C: (Main, 324 GB)</td><td>37.1 GB free</td><td>Keep at least <b>20 GB free</b> for Windows updates and the page file</td></tr>
+        </tbody>
+      </table></div>
+      <p>C: and D: are partitions of one 477 GB drive, so moving VMs between them only shifts free space; it does not create any. Moving your video courses to the external SSD (about 15 GB) is what adds real room. The new Wazuh-Server takes about 12–15 GB on D:, and snapshots grow with use.</p>
+      <p>Check free space any time from PowerShell:</p>
+      <pre class="code"><code>Get-PSDrive -PSProvider FileSystem | Select-Object Name, @{n='FreeGB';e={[math]::Round($_.Free/1GB,1)}}</code></pre>
+
+      <div class="si-divider"><button class="si-toggle" data-target="si-resources" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-resources">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        
+        <p class="si"><b>RAM:</b> භාවිත කළ හැකි RAM 15.7 GB; Windows සහ browser සඳහා 4–5 GB ඉවත් වූ පසු VM සඳහා 10–11 GB ඉතිරි වේ. Lab අනුව ක්‍රියාත්මක කරන VM (ඇස්තමේන්තු): Lab 01 — Wazuh 4 + Win-Victim 4 = 8 GB. Lab 02 — pfSense 1 + Wazuh 4 + Win-Victim 4 = 9 GB. Lab 03 — pfSense 1 + Wazuh 4 + Ubuntu-Server-Lab 2 + Kali 2 = 9 GB. Lab 04 — Wazuh 4 + Win-Victim 4 + Kali 2 = 10 GB (තද). Lab 05 — 2–4 GB. Lab 06 — 0–2 GB. Laptop මන්දගාමී නම් browser tabs වසා, Kali 2 GB සහ pfSense 1 GB කරන්න.</p>
+        <p class="si"><b>තැටිය:</b> D: (150 GB) 43.6 GB ඉතිරි — අවම 10 GB ඉතිරි කරන්න. C: (324 GB) 37.1 GB ඉතිරි — අවම 20 GB ඉතිරි කරන්න. C: සහ D: එකම 477 GB තැටියේ කොටස් බැවින් VM ගෙන යාමෙන් ඉඩ අලුතින් ඇති නොවේ; වීඩියෝ පාඨමාලා external SSD වෙත ගෙන යාමෙන් (≈15 GB) සැබෑ ඉඩ ලැබේ. Wazuh-Server සඳහා D: හි 12–15 GB යයි; snapshots භාවිතයත් සමග වර්ධනය වේ. ඉඩ පරීක්ෂාවට PowerShell Get-PSDrive විධානය භාවිත කරන්න.</p>
+      </div>
+    </section>
+
+    <!-- ================= 6. CONVENTIONS ================= -->
+    <section class="section" id="conventions">
+      <div class="kicker">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--green)">6</div><h2>Snapshots, names &amp; folders</h2></div>
+      </div>
+      <p class="lede">A snapshot freezes a VM's disk and state so you can return to it. They are your undo button for failed installs and for attack labs that change the system.</p>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--blue)"></span>Snapshot naming</div>
+      <div class="slide def"><p>Use <span class="term">NN-Short-Description</span>, where NN counts up per VM: <span class="term">01-Clean-Base</span>, <span class="term">02-SOC-Net-Verified</span>, <span class="term">03-Wazuh-Agent-Installed</span>. Keep names short, without spaces, and take one <b>before</b> every risky step.</p></div>
+      <ul class="exam-list">
+        <li><span class="chk"></span><span><b>Before any lab:</b> a clean baseline snapshot already exists for each VM you will use.</span></li>
+        <li><span class="chk"></span><span><b>Before installs or config changes:</b> shut the VM down, snapshot, then change.</span></li>
+        <li><span class="chk"></span><span><b>After a working milestone:</b> snapshot again, for example <span class="term">02-Wazuh-Installed</span>.</span></li>
+        <li><span class="chk"></span><span><b>Prune:</b> delete old, unneeded snapshots occasionally; each one keeps its changed data on disk. In VirtualBox, deleting a snapshot merges it and is safe, but needs free space while it runs.</span></li>
+      </ul>
+
+      <div class="subhead" id="howto-snapshot"><span class="sub-dot" style="background:var(--green)"></span>How to take, restore and delete a snapshot</div>
+      <ol class="step-list">
+        <li><b>Shut the VM down first.</b> A snapshot of a powered-off VM stores only the disk and stays small. A snapshot of a running VM also saves its memory (about 4 GB for a 4 GB VM). Linux: <span class="term">sudo poweroff</span>. Windows: Start → Power → Shut down.</li>
+        <li><b>Take it.</b> In the VirtualBox Manager window, click the VM, open its <b>Snapshots</b> view (toolbar), then click <b>Take</b>. Type the exact name and click OK.</li>
+        <li><b>Restore (undo).</b> With the VM shut down, open <b>Snapshots</b>, select the snapshot and click <b>Restore</b>. This <b>discards everything done after that snapshot</b>. VirtualBox offers to save the current state first; untick that unless you want to keep it.</li>
+        <li><b>Delete</b> a snapshot you no longer need: select it and click <b>Delete</b>. It is safe, but needs free disk space while it merges.</li>
+      </ol>
+      <p>The same from PowerShell (run <span class="term">$vbm = ...</span> from the verification step first):</p>
+      <pre class="code"><code>$vbm = "C:\Program Files\Oracle\VirtualBox\VBoxManage.exe"
+
+&amp; $vbm snapshot "Wazuh-Server" take "01-Ubuntu-Base"       # take (VM powered off)
+&amp; $vbm snapshot "Wazuh-Server" list                         # list snapshots
+&amp; $vbm snapshot "Wazuh-Server" restore "01-Ubuntu-Base"    # restore (VM powered off)
+&amp; $vbm snapshot "Wazuh-Server" delete "01-Ubuntu-Base"     # delete</code></pre>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--yellow)"></span>Baseline snapshots to check before Lab 01</div>
+      <div class="table-wrap"><table class="ctable">
+        <thead><tr><th>VM</th><th>Baseline snapshot (from your VM list)</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td class="row-head">pfSense-FW</td><td><span class="term">01-Clean-Base</span></td><td>Present — nothing to do</td></tr>
+          <tr><td class="row-head">Kali-Attacker</td><td><span class="term">02-SOC-Net-Verified</span></td><td>Present — nothing to do</td></tr>
+          <tr><td class="row-head">Ubuntu-Server-Lab</td><td><span class="term">02-SOC-Net-Verified</span></td><td>Present — nothing to do</td></tr>
+          <tr><td class="row-head">Win-Victim</td><td><span class="term">01-Clean-Base</span></td><td>Present — Lab 01 adds <span class="term">02-Pre-Wazuh</span> on top</td></tr>
+          <tr><td class="row-head">Wazuh-Server</td><td>none yet</td><td>Lab 01 creates it, with a snapshot at every checkpoint</td></tr>
+        </tbody>
+      </table></div>
+      <div class="callout snap"><b>📌 Every lab guide marks its snapshot points</b> with a green <b>📌 Snapshot checkpoint</b> box, and each guide opens with a table listing all of them. If a guide tells you to restore, it names the exact snapshot.</div>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--yellow)"></span>Folders</div>
+      <p>SOC lab VMs live under one tree on D:, one folder per VM:</p>
+      <pre class="code"><code>D:\04_Personal_and_System\16_Virtual_Machines\SOC_Lab\
+    Kali\Kali-Attacker\
+    Wazuh\Wazuh-Server\        (created in Lab 01)
+    ...</code></pre>
+      <p>Keep your notes, screenshots and exported configs in a separate private folder such as <span class="term">SOC_Lab_Notes\lab-01\</span>, not inside a VM folder. That makes them easy to back up and impossible to delete by accident when you remove a VM.</p>
+
+      <div class="si-divider"><button class="si-toggle" data-target="si-conventions" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-conventions">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        
+        <p class="si"><b>Snapshot යනු:</b> VM එකක තැටිය සහ තත්ත්වය ශීතකරණය කර පසුව ආපසු යා හැකි "undo" බොත්තමකි. නම් කිරීම: NN-Short-Description (උදා: 01-Clean-Base, 02-SOC-Net-Verified), හිස්තැන් නැතිව. Lab එකකට පෙර සියලු VM සඳහා clean baseline snapshot එකක් තිබිය යුතුය; වෙනස්කම්වලට පෙර snapshot ගෙන, සාර්ථක milestone එකකින් පසු නැවත ගන්න; අනවශ්‍ය ඒවා වරින්වර මකන්න.</p>
+        <p class="si"><b>ගන්නා ආකාරය:</b> VM එක shut down කරන්න (ක්‍රියාත්මක VM එකක snapshot එක memory ද සුරකින නිසා ≈4 GB වැඩිය). VirtualBox Manager හි VM තෝරා Snapshots → Take → නම ටයිප් කර OK. Restore: VM off කර snapshot තෝරා Restore — එය snapshot එකෙන් පසු කළ සියල්ල මකා දමයි (වත්මන් තත්ත්වය සුරැකීමේ විකල්පය ඔබට අවශ්‍ය නොවේ නම් ඉවත් කරන්න). Delete ආරක්ෂිතය, නමුත් merge වන විට තැටි ඉඩ අවශ්‍යයි.</p>
+        <p class="si"><b>Baseline snapshots:</b> pfSense-FW — 01-Clean-Base; Kali-Attacker සහ Ubuntu-Server-Lab — 02-SOC-Net-Verified; Win-Victim — 01-Clean-Base. මේවා දැනටමත් ඇත. Wazuh-Server Lab 01 හිදී සාදන අතර සෑම checkpoint එකකදීම snapshot ගනී.</p>
+        <p class="si"><b>ෆෝල්ඩර:</b> SOC lab VM D:\04_Personal_and_System\16_Virtual_Machines\SOC_Lab\ යටතේ, VM එකකට ෆෝල්ඩරයක්. ඔබේ සටහන්, ස්ක්‍රීන්ෂොට් සහ configs VM ෆෝල්ඩරයෙන් පිටත වෙනම පෞද්ගලික ෆෝල්ඩරයක (SOC_Lab_Notes\lab-01\) තබන්න — VM එකක් ඉවත් කරන විට අහම්බෙන් මැකී නොයයි. Snapshots backup නොවේ: ඒවා VM එකේම තැටියේ ඇත.</p>
+      </div>
+    </section>
+
+    <!-- ================= 7. PRE-FLIGHT ================= -->
+    <section class="section" id="preflight">
+      <div class="kicker">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--red)">7</div><h2>Pre-flight checklist</h2></div>
+      </div>
+      <p class="lede">Run through this once now, and again before any lab where something has changed.</p>
+
+      <ul class="exam-list">
+        <li><span class="chk"></span><span><b>Windows 11 is installed and boots on Win-Victim.</b> Note the username you set; the Lab 01 agent steps need an administrator account.</span></li>
+        <li><span class="chk"></span><span><b>Every VM starts</b> from its new location after the move to C: (start each once and shut it down).</span></li>
+        <li><span class="chk"></span><span><b>Adapters match the plan:</b> lab VMs use Internal Network named <span class="term">SOC-Lab-Net</span> exactly; the Win-Victim graphics controller is VBoxSVGA.</span></li>
+        <li><span class="chk"></span><span><b>pfSense default admin password has been changed.</b> It starts with a known default; change it before you rely on the firewall.</span></li>
+        <li><span class="chk"></span><span><b>A clean snapshot exists</b> for pfSense-FW, Kali-Attacker, Ubuntu-Server-Lab and Win-Victim (see the baseline table in Section 6), and you know how to take and restore one.</span></li>
+        <li><span class="chk"></span><span><b>Free space:</b> D: at least 25 GB free before Lab 01 (the new VM needs 12–15 GB), C: at least 20 GB.</span></li>
+        <li><span class="chk"></span><span><b>Laptop on charger</b> with the High performance power plan, and CPU virtualization (VT-x) enabled in the BIOS.</span></li>
+        <li><span class="chk"></span><span><b>Passwords</b> for every VM and the Wazuh admin account are stored in a password manager, not in a text file next to the VMs.</span></li>
+        <li><span class="chk"></span><span><b>Downloaded:</b> Ubuntu Server 24.04 LTS ISO for Lab 01. Keep ISOs in one folder.</span></li>
+      </ul>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--green)"></span>Verification commands (Windows PowerShell)</div>
+      <p>VBoxManage ships with VirtualBox. These list your VMs, their snapshots, and which network each adapter uses:</p>
+      <pre class="code"><code>$vbm = "C:\Program Files\Oracle\VirtualBox\VBoxManage.exe"
+
+&amp; $vbm list vms                        # all registered VMs
+&amp; $vbm list runningvms                 # VMs currently on
+&amp; $vbm snapshot "Win-Victim" list      # snapshots of one VM
+
+# which network each adapter uses
+&amp; $vbm showvminfo "Kali-Attacker" --machinereadable | Select-String '^(nic|intnet)[0-9]'</code></pre>
+      <p>In the adapter output, <span class="term">nic1="intnet"</span> with <span class="term">intnet1="SOC-Lab-Net"</span> confirms an adapter is on the lab network.</p>
+
+      <div class="si-divider"><button class="si-toggle" data-target="si-preflight" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-preflight">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        
+        <p class="si"><b>ආරම්භයට පෙර පරීක්ෂා:</b> Win-Victim හි Windows 11 ස්ථාපිතව boot වේ, administrator ගිණුම් නම සටහන් කර ඇත. සියලු VM C: වෙත ගෙන ගිය පසු නව ස්ථානයෙන් ආරම්භ වේ. ඇඩැප්ටර සැලැස්මට ගැළපේ (SOC-Lab-Net නම හරියටම; Win-Victim graphics controller VBoxSVGA). pfSense හි පෙරනිමි admin මුරපදය වෙනස් කර ඇත. pfSense, Kali, Ubuntu-Server-Lab සහ Win-Victim සඳහා clean snapshot තිබේ. Lab 01 ට පෙර D: හි අවම 25 GB සහ C: හි 20 GB ඉඩ ඇත. Laptop එක charger එකේ, High performance power plan, BIOS හි VT-x සක්‍රීයයි. සියලු මුරපද password manager එකක ඇත (VM අසල text ගොනුවක නොවේ). Lab 01 සඳහා Ubuntu Server 24.04 LTS ISO බාගත කර ඇත.</p>
+        <p class="si"><b>සත්‍යාපන විධාන:</b> PowerShell හි VBoxManage භාවිත කරන්න: list vms (සියලු VM), list runningvms (දැන් ක්‍රියාත්මක), snapshot "VM" list (snapshots), සහ showvminfo --machinereadable (adapter විස්තර). ප්‍රතිදානයේ nic1="intnet" සහ intnet1="SOC-Lab-Net" දිස්වුවහොත් ඇඩැප්ටරය lab ජාලයේ බව තහවුරු වේ.</p>
+      </div>
+    </section>
+
+    <!-- ================= 8. SAFETY ================= -->
+    <section class="section" id="safety">
+      <div class="kicker">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--yellow)">8</div><h2>Safety &amp; publishing rules</h2></div>
+      </div>
+
+      <div class="slide-row cols-2">
+        <div class="slide accent-red"><div class="slide-title">Safety rules</div><ul>
+          <li>Run attack tools <b>only</b> against your own lab VMs on SOC-Lab-Net.</li>
+          <li>Never attach an attack VM to a bridged adapter or your home Wi-Fi network.</li>
+          <li>Use malware only as harmless test files (EICAR, Atomic Red Team) in the isolated lab.</li>
+          <li>Snapshot before every attack lab and restore afterwards.</li>
+          <li>Disable shared clipboard and shared folders on any VM that handles suspicious files.</li>
+        </ul></div>
+        <div class="slide accent-green"><div class="slide-title">Publishing rules</div><ul>
+          <li><b>Publish:</b> detection rules, configs without secrets, architecture diagrams, screenshots, write-ups.</li>
+          <li><b>Never publish:</b> passwords, API keys, <span class="term">wazuh-passwords.txt</span>, agent keys, malware, attack scripts.</li>
+          <li><b>Blur or crop</b> screenshots that show your name, email, device ID or product ID.</li>
+          <li>Credit a tutorial video in one line if you followed it; describe what you added beyond it.</li>
+        </ul></div>
+      </div>
+
+      <div class="callout soc">Treat the lab like a real incident environment: the habit of isolating, snapshotting and sanitising what you share is part of what employers want to see.</div>
+
+      <div class="si-divider"><button class="si-toggle" data-target="si-safety" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-safety">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        
+        <p class="si"><b>ආරක්ෂක නීති:</b> ප්‍රහාරක මෙවලම් ධාවනය කරන්නේ SOC-Lab-Net මත ඔබේම lab VM වලට පමණි. ප්‍රහාරක VM එකක් bridged ඇඩැප්ටරයකට හෝ ගෘහ Wi-Fi ජාලයට කිසිවිටෙක සම්බන්ධ නොකරන්න. අනිෂ්ට මෘදුකාංග වෙනුවට හානිකර පරීක්ෂණ ගොනු (EICAR, Atomic Red Team) පමණක් හුදකලා lab එකේ භාවිත කරන්න. සෑම ප්‍රහාර lab එකකටම පෙර snapshot ගෙන පසුව restore කරන්න. සැක සහිත ගොනු හසුරුවන VM එකක shared clipboard සහ shared folders අක්‍රිය කරන්න.</p>
+        <p class="si"><b>ප්‍රකාශන නීති:</b> ප්‍රකාශ කරන්න: detection rules, රහස් නැති configs, architecture රූප, ස්ක්‍රීන්ෂොට්, write-ups. කිසිවිටෙක ප්‍රකාශ නොකරන්න: මුරපද, API යතුරු, wazuh-passwords.txt, agent යතුරු, අනිෂ්ට කේත, ප්‍රහාර scripts. ඔබේ නම, email, device ID, product ID පෙනෙන ස්ක්‍රීන්ෂොට් බොඳ කරන්න හෝ කපා ඉවත් කරන්න. Tutorial video එකක් අනුගමනය කළේ නම් එක පේළියකින් credit දී, ඔබ එයට අමතරව එකතු කළ දේ විස්තර කරන්න.</p>
+      </div>
+    </section>
+
+    <!-- ================= 9. ROADMAP ================= -->
+    <section class="section" id="roadmap">
+      <div class="kicker">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--blue)">9</div><h2>Lab roadmap</h2></div>
+      </div>
+      <p class="lede">Six labs, built one at a time. Labs 01–04 share the same environment and each adds new detections; labs 05 and 06 need almost no VM resources.</p>
+
+      <div class="table-wrap"><table class="ctable">
+        <thead><tr><th>#</th><th>Lab</th><th>Builds on</th><th>New VM?</th><th>Feeds portfolio project</th><th>Guide</th></tr></thead>
+        <tbody>
+          <tr><td class="row-head">01</td><td>Wazuh SIEM + Windows detections</td><td>—</td><td>Wazuh-Server</td><td>SentinelOps</td><td><a class="term" href="lab-01-wazuh-siem-windows-detections.html">Ready</a></td></tr>
+          <tr><td class="row-head">02</td><td>pfSense + Suricata + log forwarding</td><td>Lab 01</td><td>No</td><td>SentinelOps</td><td>Pending</td></tr>
+          <tr><td class="row-head">03</td><td>DVWA + WAF: SQL injection detection</td><td>Labs 01–02</td><td>No (Docker)</td><td>SentinelOps</td><td>Pending</td></tr>
+          <tr><td class="row-head">04</td><td>Attack simulation and detection</td><td>Lab 01</td><td>No</td><td>SentinelOps · test traffic for TriageAI</td><td>Pending</td></tr>
+          <tr><td class="row-head">05</td><td>Phishing email investigation</td><td>—</td><td>No</td><td>PhishLens</td><td>Pending</td></tr>
+          <tr><td class="row-head">06</td><td>PCAP investigation</td><td>—</td><td>No</td><td>ThreatPulse (optional)</td><td>Pending</td></tr>
+        </tbody>
+      </table></div>
+      <div class="callout">Publish each finished lab as one page in your website's Labs section, in a lower tier than your 12 flagship projects. Lab 00 itself is reference material: publish its diagram and VM table as the "Lab environment" page, not as a lab note.</div>
+
+      <div class="si-divider"><button class="si-toggle" data-target="si-roadmap" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-roadmap">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        
+        <p class="si"><b>Lab හය:</b> 01 Wazuh SIEM + Windows detections (නව VM: Wazuh-Server; SentinelOps ට). 02 pfSense + Suricata + log forwarding (Lab 01 මත; SentinelOps). 03 DVWA + WAF — SQL injection detection (Lab 01–02 මත; Docker; SentinelOps). 04 Attack simulation and detection (Lab 01 මත; SentinelOps සහ TriageAI සඳහා පරීක්ෂණ traffic). 05 Phishing email investigation (PhishLens). 06 PCAP investigation (ThreatPulse — විකල්ප).</p>
+        <p class="si"><b>ක්‍රමය:</b> Lab 01–04 එකම පරිසරය බෙදාගෙන සෑම එකක්ම නව detections එකතු කරයි; Lab 05 සහ 06 ට VM සම්පත් ඉතා අඩුවෙන් අවශ්‍යයි. අවසන් කළ සෑම lab එකක්ම ඔබේ වෙබ් අඩවියේ Labs කොටසේ එක් පිටුවක් ලෙස, ප්‍රධාන ව්‍යාපෘති 12 ට පහළ මට්ටමක ප්‍රකාශයට පත් කරන්න. Lab 00 යනු යොමු ද්‍රව්‍යයකි — එහි රූප සටහන සහ VM වගුව "Lab environment" පිටුව ලෙස ප්‍රකාශ කරන්න, lab සටහනක් ලෙස නොවේ.</p>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         APPENDED SECTIONS — beyond the overview
+         ============================================================ -->
+
+    <section class="section collapsible" id="exam">
+      <div class="kicker" data-toggle="exam">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--yellow)">10</div><h2>Interview &amp; Cert Takeaways</h2></div>
+        <button class="collapse-toggle" id="exam-toggle" aria-expanded="false" aria-controls="exam-body" aria-label="Expand section"><span class="chevron">▾</span></button>
+      </div>
+      <div class="collapse-body" id="exam-body">
+      <p class="lede">Be able to explain your lab design out loud in two minutes. These are the points interviewers ask about.</p>
+      <ul class="exam-list">
+        <li><span class="chk"></span><span><b>Why isolate?</b> An internal network keeps attacks and malware samples from reaching your home network or the internet.</span></li>
+        <li><span class="chk"></span><span><b>VirtualBox network modes:</b> <b>NAT</b> = VM reaches the internet, nothing reaches it. <b>Internal</b> = VMs with the same network name talk only to each other. <b>Host-only</b> = VMs and the host, no internet. <b>Bridged</b> = VM sits on the real LAN (avoid for lab VMs).</span></li>
+        <li><span class="chk"></span><span><b>/24</b> = 255.255.255.0 = 254 usable host addresses; 192.168.0.0/16 is private (RFC 1918) address space.</span></li>
+        <li><span class="chk"></span><span><b>Static vs DHCP:</b> servers and key lab hosts use fixed addresses; clients can use DHCP. Keep static addresses outside the DHCP pool.</span></li>
+        <li><span class="chk"></span><span><b>Segmentation</b> limits the blast radius: a compromised host can only reach what the firewall lets it reach.</span></li>
+        <li><span class="chk"></span><span><b>Snapshots</b> make labs repeatable, but they are not backups — they live on the same disk as the VM.</span></li>
+        <li><span class="chk"></span><span><b>Baseline first:</b> you need to know what normal looks like before you can call something an anomaly.</span></li>
+      </ul>
+      <div class="si-divider"><button class="si-toggle" data-target="si-exam" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-exam">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        <p class="si">සම්මුඛ පරීක්ෂණයකදී ඔබේ lab නිර්මාණය විනාඩි 2කින් පැහැදිලි කළ හැකි විය යුතුය.</p>
+        <p class="si"><b>ඇයි හුදකලා කරන්නේ?:</b> අභ්‍යන්තර ජාලය මගින් ප්‍රහාර සහ malware ගෘහ ජාලයට හෝ අන්තර්ජාලයට ළඟා වීම වළක්වයි.</p>
+        <p class="si"><b>VirtualBox ජාල ආකාර:</b> NAT — VM අන්තර්ජාලයට යයි, කිසිවක් VM වෙත නොපැමිණේ. Internal — එකම ජාල නාමය ඇති VM අතර පමණි. Host-only — VM සහ host, අන්තර්ජාලය නැත. Bridged — VM සැබෑ LAN එකේ (lab VM සඳහා වළක්වන්න).</p>
+        <p class="si"><b>IP පිළිබඳ:</b> /24 = 255.255.255.0 = භාවිත කළ හැකි hosts 254ක්; 192.168.0.0/16 private (RFC 1918) ලිපින. Servers සහ ප්‍රධාන lab hosts සඳහා static; static ලිපින DHCP පරාසයෙන් පිටත තබන්න.</p>
+        <p class="si"><b>අනෙකුත්:</b> Segmentation මගින් බිඳවැටීමක බලපෑම (blast radius) සීමා කරයි. Snapshots lab නැවත කළ හැකි කරයි, නමුත් backup නොවේ — VM එකේම තැටියේ ඇත. Baseline පළමුව: සාමාන්‍ය තත්ත්වය දැන සිටියොත් පමණක් anomaly හඳුනාගත හැක.</p>
+      </div>
+      </div>
+    </section>
+
+    <section class="section collapsible" id="soc">
+      <div class="kicker" data-toggle="soc">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--red)">11</div><h2>SOC Analyst — Real-World Relevance</h2></div>
+        <button class="collapse-toggle" id="soc-toggle" aria-expanded="false" aria-controls="soc-body" aria-label="Expand section"><span class="chevron">▾</span></button>
+      </div>
+      <div class="collapse-body" id="soc-body">
+      <p class="lede">Your lab mirrors the pieces of a small company network that a SOC watches every day.</p>
+      <div class="role-card"><div class="role-title"><span class="ico" style="background:#EA4335">NW</span>Network context for alerts</div><p>Knowing which subnet a host is on and what the firewall allows helps you decide if an alert is expected traffic or lateral movement.</p></div>
+      <div class="role-card"><div class="role-title"><span class="ico" style="background:#F09300">AS</span>Asset inventory</div><p>A SOC keeps an inventory of hosts, roles and addresses. Your VM table and IP plan are a small version of that, and alert triage depends on it.</p></div>
+      <div class="role-card"><div class="role-title"><span class="ico" style="background:#4285F4">RB</span>Repeatable testing</div><p>Resetting a known-good state before each exercise is how detection engineers test rules without contaminating results.</p></div>
+      <div class="callout soc">SOC takeaway: you cannot defend what you cannot list. Keep this environment page up to date as the lab changes.</div>
+      <div class="si-divider"><button class="si-toggle" data-target="si-soc" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-soc">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        <p class="si">ඔබේ lab එක SOC එකක් දිනපතා නිරීක්ෂණය කරන කුඩා ආයතනික ජාලයක කොටස් පිළිබිඹු කරයි.</p>
+        <p class="si"><b>ජාල සන්දර්භය:</b> Host එකක් ඇත්තේ කුමන subnet එකේද, firewall එක ඉඩ දෙන්නේ කුමක්ද යන්න දැනීමෙන් alert එකක් අපේක්ෂිත traffic එකක්ද lateral movement එකක්ද යන්න තීරණය කළ හැක.</p>
+        <p class="si"><b>Asset inventory:</b> SOC එකක් hosts, භූමිකාවන් සහ ලිපින ලැයිස්තුවක් තබයි — ඔබේ VM වගුව සහ IP සැලැස්ම එහි කුඩා අනුවාදයකි; alert triage එය මත රඳා පවතී.</p>
+        <p class="si"><b>නැවත කළ හැකි පරීක්ෂණ:</b> සෑම අභ්‍යාසයකටම පෙර දන්නා හොඳ තත්ත්වයට reset කිරීම detection engineers rules පරීක්ෂා කරන ක්‍රමයයි.</p>
+        <p class="si">ප්‍රධාන කරුණ: ලැයිස්තුගත කර නැති දේ ආරක්ෂා කළ නොහැක — lab වෙනස් වන විට මෙම පරිසර පිටුව යාවත්කාලීනව තබන්න.</p>
+      </div>
+      </div>
+    </section>
+
+    <section class="section collapsible" id="cloud">
+      <div class="kicker" data-toggle="cloud">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--purple)">12</div><h2>Cloud Security Engineer — Real-World Relevance</h2></div>
+        <button class="collapse-toggle" id="cloud-toggle" aria-expanded="false" aria-controls="cloud-body" aria-label="Expand section"><span class="chevron">▾</span></button>
+      </div>
+      <div class="collapse-body" id="cloud-body">
+      <p class="lede">The same design ideas appear in cloud networks with different names.</p>
+      <div class="role-card"><div class="role-title"><span class="ico" style="background:#7B61FF">VP</span>Virtual network equivalents</div><p>SOC-Lab-Net behaves like a private subnet in a VPC, pfSense plays the role of a gateway plus security group, and the NAT adapter resembles a NAT gateway.</p></div>
+      <div class="role-card"><div class="role-title"><span class="ico" style="background:#34A853">IC</span>Infrastructure as documented design</div><p>Writing your topology, IP plan and rules down is the first step towards infrastructure as code, which you will use for the AWS projects.</p></div>
+      <div class="role-card"><div class="role-title"><span class="ico" style="background:#4285F4">LP</span>Least exposure</div><p>Binding the dashboard to 127.0.0.1 and avoiding bridged adapters is the same principle as not opening a cloud service to 0.0.0.0/0.</p></div>
+      <div class="callout cloud">Cloud takeaway: network isolation, least exposure and documented topology transfer directly to AWS security design.</div>
+      <div class="si-divider"><button class="si-toggle" data-target="si-cloud" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-cloud">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        <p class="si">එකම නිර්මාණ අදහස් cloud ජාලවල වෙනත් නම් සමග දිස්වේ.</p>
+        <p class="si"><b>Virtual network සමානකම්:</b> SOC-Lab-Net යනු VPC එකක private subnet එකකට සමානය; pfSense gateway සහ security group භූමිකාව ඉටු කරයි; NAT ඇඩැප්ටරය NAT gateway එකකට සමානය.</p>
+        <p class="si"><b>ලේඛනගත නිර්මාණය:</b> ඔබේ topology, IP සැලැස්ම සහ රීති ලිවීම infrastructure as code කරා පළමු පියවරයි — AWS ව්‍යාපෘති සඳහා ඔබ එය භාවිත කරනු ඇත.</p>
+        <p class="si"><b>අවම නිරාවරණය:</b> Dashboard එක 127.0.0.1 වෙත bind කිරීම සහ bridged ඇඩැප්ටර මඟහැරීම cloud service එකක් 0.0.0.0/0 වෙත විවෘත නොකිරීමේ මූලධර්මයම වේ (least exposure).</p>
+        <p class="si">ප්‍රධාන කරුණ: ජාල හුදකලාව, අවම නිරාවරණය සහ ලේඛනගත topology AWS ආරක්ෂක නිර්මාණයට සෘජුවම මාරු වේ.</p>
+      </div>
+      </div>
+    </section>
+
+    <section class="section collapsible" id="glossary">
+      <div class="kicker" data-toggle="glossary">
+        <div class="kicker-left"><div class="num-badge" style="background:#5f6368">13</div><h2>Glossary — Acronyms &amp; Meanings</h2></div>
+        <button class="collapse-toggle" id="glossary-toggle" aria-expanded="false" aria-controls="glossary-body" aria-label="Expand section"><span class="chevron">▾</span></button>
+      </div>
+      <div class="collapse-body" id="glossary-body">
+      <div class="table-wrap">
+      <table class="gtable">
+        <thead><tr><th>Acronym</th><th>Full term</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td class="acr">VM</td><td class="term-full">Virtual Machine</td><td>A software computer that runs inside another computer.</td></tr>
+          <tr><td class="acr">—</td><td class="term-full">Hypervisor</td><td>Software that runs VMs; VirtualBox is a type 2 hypervisor that runs on top of Windows.</td></tr>
+          <tr><td class="acr">NAT</td><td class="term-full">Network Address Translation</td><td>Lets a VM share the host's connection to reach the internet.</td></tr>
+          <tr><td class="acr">—</td><td class="term-full">Internal network</td><td>VirtualBox network visible only to VMs using the same network name.</td></tr>
+          <tr><td class="acr">—</td><td class="term-full">Host-only network</td><td>VirtualBox network connecting VMs and the host, with no internet.</td></tr>
+          <tr><td class="acr">DHCP</td><td class="term-full">Dynamic Host Configuration Protocol</td><td>Automatically hands out IP addresses from a pool.</td></tr>
+          <tr><td class="acr">CIDR</td><td class="term-full">Classless Inter-Domain Routing</td><td>Notation like /24 that shows how many bits belong to the network part of an address.</td></tr>
+          <tr><td class="acr">—</td><td class="term-full">Subnet</td><td>A slice of a network, such as 192.168.1.0/24.</td></tr>
+          <tr><td class="acr">—</td><td class="term-full">Snapshot</td><td>A saved VM state you can restore.</td></tr>
+          <tr><td class="acr">—</td><td class="term-full">Baseline</td><td>A known-good reference state used to spot change.</td></tr>
+          <tr><td class="acr">VPC</td><td class="term-full">Virtual Private Cloud</td><td>A private, isolated network inside a cloud provider.</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <div class="si-divider"><button class="si-toggle" data-target="si-glossary" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-glossary">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        <p class="si"><b>VM / Hypervisor:</b> VM — වෙනත් පරිගණකයක් තුළ ධාවනය වන මෘදුකාංග පරිගණකයකි. Hypervisor — VM ධාවනය කරන මෘදුකාංගය (VirtualBox යනු Windows මත ධාවනය වන type 2 hypervisor එකකි).</p>
+        <p class="si"><b>ජාල ආකාර:</b> NAT — VM ට host හි සම්බන්ධතාවය බෙදාගෙන අන්තර්ජාලයට යාමට ඉඩ දෙයි. Internal network — එකම නාමය භාවිත කරන VM වලට පමණක් පෙනෙන ජාලය. Host-only network — VM සහ host සම්බන්ධ කරයි, අන්තර්ජාලය නැත.</p>
+        <p class="si"><b>ලිපිනකරණය:</b> DHCP — පරාසයකින් IP ලිපින ස්වයංක්‍රීයව ලබා දෙයි. CIDR — /24 වැනි සටහන, ලිපිනයේ ජාල කොටස සඳහා බිටු ගණන පෙන්වයි. Subnet — ජාලයක කොටසක් (192.168.1.0/24).</p>
+        <p class="si"><b>අනෙකුත්:</b> Snapshot — සුරකින ලද VM තත්ත්වයක්. Baseline — වෙනස්වීම් හඳුනාගැනීමට භාවිත දන්නා හොඳ යොමු තත්ත්වය. VPC — cloud සපයන්නෙකු තුළ private, හුදකලා ජාලයක්.</p>
+      </div>
+      </div>
+    </section>
+
+    <section class="section collapsible" id="comparison">
+      <div class="kicker" data-toggle="comparison">
+        <div class="kicker-left"><div class="num-badge" style="background:#5f6368">14</div><h2>Comparison Tables</h2></div>
+        <button class="collapse-toggle" id="comparison-toggle" aria-expanded="false" aria-controls="comparison-body" aria-label="Expand section"><span class="chevron">▾</span></button>
+      </div>
+      <div class="collapse-body" id="comparison-body">
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--blue)"></span>VirtualBox network modes</div>
+      <div class="table-wrap">
+        <table class="ctable">
+          <thead><tr><th>Mode</th><th>VM → internet</th><th>VM ↔ VM</th><th>Host ↔ VM</th><th>Use in this lab</th></tr></thead>
+          <tbody>
+            <tr><td class="row-head">NAT</td><td>Yes</td><td>No (each VM is separate)</td><td>Only through port-forwarding</td><td>Updates, installers, dashboard port-forward</td></tr>
+            <tr><td class="row-head">Internal network</td><td>No</td><td>Yes, same network name</td><td>No</td><td><b>SOC-Lab-Net</b> — all lab traffic</td></tr>
+            <tr><td class="row-head">Host-only</td><td>No</td><td>Yes</td><td>Yes</td><td>Linux+ study VMs only</td></tr>
+            <tr><td class="row-head">Bridged</td><td>Yes</td><td>Yes (on real LAN)</td><td>Yes</td><td><b>Never</b> for lab VMs</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--yellow)"></span>Static vs DHCP addressing</div>
+      <div class="table-wrap">
+        <table class="ctable">
+          <thead><tr><th>Type</th><th>Pros</th><th>Cons</th><th>Used for</th></tr></thead>
+          <tbody>
+            <tr><td class="row-head">Static</td><td>Address never changes; rules and screenshots stay valid</td><td>Manual setup; must avoid the DHCP pool</td><td>pfSense, Kali, Wazuh-Server, Win-Victim</td></tr>
+            <tr><td class="row-head">DHCP</td><td>Automatic, nothing to configure</td><td>Address can change between boots</td><td>Ubuntu-Server-Lab and spare VMs</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="si-divider"><button class="si-toggle" data-target="si-comparison" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-comparison">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        <p class="si"><b>VirtualBox ජාල ආකාර:</b> NAT — VM → අන්තර්ජාලය: ඔව්; VM අතර: නැත; host → VM: port-forwarding හරහා පමණි; භාවිතය: යාවත්කාලීන, ස්ථාපක, dashboard port-forward. Internal network — අන්තර්ජාලය නැත; එකම නම ඇති VM අතර ඔව්; host නැත; භාවිතය: SOC-Lab-Net — සියලු lab traffic. Host-only — අන්තර්ජාලය නැත; VM අතර සහ host සමග ඔව්; Linux+ අධ්‍යයන VM සඳහා පමණි. Bridged — අන්තර්ජාලය ඔව්; සැබෑ LAN එකේ; lab VM සඳහා කිසිවිටෙක නැත.</p>
+        <p class="si"><b>Static vs DHCP:</b> Static — ලිපිනය වෙනස් නොවේ, rules සහ ස්ක්‍රීන්ෂොට් වලංගුව පවතී; නමුත් අතින් සැකසිය යුතු අතර DHCP පරාසය මඟහැරිය යුතුය; pfSense, Kali, Wazuh-Server, Win-Victim සඳහා. DHCP — ස්වයංක්‍රීයයි, සැකසීමක් නැත; නමුත් boot අතර ලිපිනය වෙනස් විය හැක; Ubuntu-Server-Lab සහ අමතර VM සඳහා.</p>
+      </div>
+      </div>
+    </section>
+
+    <!-- ===== SINHALA VOCABULARY ===== -->
+    <section class="section collapsible" id="sinhala-vocab" style="scroll-margin-top:84px;">
+      <div class="kicker" data-toggle="sinhala-vocab">
+        <div class="kicker-left">
+          <div class="num-badge" style="background:linear-gradient(135deg,#34A853,#1a73e8)">15</div>
+          <h2>🇱🇰 Sinhala Vocabulary — පාඩමෙහි දුෂ්කර වචන</h2>
+        </div>
+        <button class="collapse-toggle" id="sinhala-vocab-toggle" aria-expanded="false" aria-controls="sinhala-vocab-body" aria-label="Expand section"><span class="chevron">▾</span></button>
+      </div>
+      <div class="collapse-body" id="sinhala-vocab-body">
+      <p class="lede" style="margin-bottom:22px;">Key English words from this overview, with Sinhala meanings and example sentences.</p>
+      <div class="vocab-grid">
+
+        <div class="vocab-card">
+          <div class="vocab-header"><span class="vocab-word">isolation</span><span class="vocab-pos">noun</span></div>
+          <div class="vocab-body">
+            <div class="vocab-meanings">
+              <div class="vocab-en"><span class="vocab-lang-label">🇬🇧 English</span><p>Keeping something separate so it cannot affect or be reached by anything else.</p></div>
+              <div class="vocab-si"><span class="vocab-lang-label">🇱🇰 සිංහල</span><p>වෙනත් දේවලට බලපෑමක් නොවන ලෙස හෝ ඒවාට ළඟා විය නොහැකි ලෙස වෙන් කර තැබීම</p></div>
+            </div>
+            <div class="vocab-sentences-head">Sample Sentences</div>
+            <ul class="vocab-sentences">
+              <li><span class="vocab-tag tag-cyber">Cyber</span><span>Network <span class="vocab-hl">isolation</span> stops malware in the lab from reaching the home network.</span></li>
+              <li><span class="vocab-tag tag-daily">Daily</span><span>The patient was kept in <span class="vocab-hl">isolation</span> to prevent the illness from spreading.</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="vocab-card">
+          <div class="vocab-header"><span class="vocab-word">snapshot</span><span class="vocab-pos">noun</span></div>
+          <div class="vocab-body">
+            <div class="vocab-meanings">
+              <div class="vocab-en"><span class="vocab-lang-label">🇬🇧 English</span><p>A saved copy of a virtual machine's state that you can return to later.</p></div>
+              <div class="vocab-si"><span class="vocab-lang-label">🇱🇰 සිංහල</span><p>පසුව ආපසු යා හැකි පරිදි සුරකින ලද virtual machine එකක තත්ත්වයේ පිටපතක්</p></div>
+            </div>
+            <div class="vocab-sentences-head">Sample Sentences</div>
+            <ul class="vocab-sentences">
+              <li><span class="vocab-tag tag-sw">Software</span><span>I took a <span class="vocab-hl">snapshot</span> before installing Wazuh, so I could roll back.</span></li>
+              <li><span class="vocab-tag tag-hw">Hardware</span><span>A <span class="vocab-hl">snapshot</span> is stored on the same disk as the VM, so it is not a backup.</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="vocab-card">
+          <div class="vocab-header"><span class="vocab-word">segmentation</span><span class="vocab-pos">noun</span></div>
+          <div class="vocab-body">
+            <div class="vocab-meanings">
+              <div class="vocab-en"><span class="vocab-lang-label">🇬🇧 English</span><p>Dividing a network into separate parts so a problem in one part does not spread to the others.</p></div>
+              <div class="vocab-si"><span class="vocab-lang-label">🇱🇰 සිංහල</span><p>එක් කොටසක ඇති ගැටලුවක් අන් කොටස්වලට පැතිරීම වැළැක්වීමට ජාලයක් වෙන් වෙන් කොටස් වලට බෙදීම</p></div>
+            </div>
+            <div class="vocab-sentences-head">Sample Sentences</div>
+            <ul class="vocab-sentences">
+              <li><span class="vocab-tag tag-net">Network</span><span>Network <span class="vocab-hl">segmentation</span> keeps the guest Wi-Fi away from the office servers.</span></li>
+              <li><span class="vocab-tag tag-cyber">Cyber</span><span><span class="vocab-hl">Segmentation</span> reduces how far an attacker can move after a breach.</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="vocab-card">
+          <div class="vocab-header"><span class="vocab-word">baseline</span><span class="vocab-pos">noun</span></div>
+          <div class="vocab-body">
+            <div class="vocab-meanings">
+              <div class="vocab-en"><span class="vocab-lang-label">🇬🇧 English</span><p>A known normal state used as a starting point for comparing later changes.</p></div>
+              <div class="vocab-si"><span class="vocab-lang-label">🇱🇰 සිංහල</span><p>පසුකාලීන වෙනස්කම් සංසන්දනය කිරීම සඳහා ආරම්භක ලෙස භාවිත කරන දන්නා සාමාන්‍ය තත්ත්වය</p></div>
+            </div>
+            <div class="vocab-sentences-head">Sample Sentences</div>
+            <ul class="vocab-sentences">
+              <li><span class="vocab-tag tag-cyber">Cyber</span><span>Without a <span class="vocab-hl">baseline</span> of normal logons, an odd one is hard to spot.</span></li>
+              <li><span class="vocab-tag tag-sw">Software</span><span>My <span class="vocab-hl">baseline</span> snapshot is a clean Windows install with no tools yet.</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="vocab-card">
+          <div class="vocab-header"><span class="vocab-word">gateway</span><span class="vocab-pos">noun</span></div>
+          <div class="vocab-body">
+            <div class="vocab-meanings">
+              <div class="vocab-en"><span class="vocab-lang-label">🇬🇧 English</span><p>A device that connects one network to another and passes traffic between them.</p></div>
+              <div class="vocab-si"><span class="vocab-lang-label">🇱🇰 සිංහල</span><p>එක් ජාලයක් තවත් ජාලයකට සම්බන්ධ කර ඒ අතර ගමනාගමනය යවන උපාංගය (ද්වාරය)</p></div>
+            </div>
+            <div class="vocab-sentences-head">Sample Sentences</div>
+            <ul class="vocab-sentences">
+              <li><span class="vocab-tag tag-net">Network</span><span>pfSense is the <span class="vocab-hl">gateway</span> between the lab network and the internet.</span></li>
+              <li><span class="vocab-tag tag-daily">Daily</span><span>The airport is the <span class="vocab-hl">gateway</span> to the whole region.</span></li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+      </div>
+    </section>
+
+    <footer>
+      Personal lab notes — Lab Environment Overview<br>Lab 00 · Read this first
+      <br><a class="back-top" href="#toc">Back to top ↑</a>
+    </footer>
+
+  </main>
+</div>
+
+<div class="bottom-nav">
+  <span></span>
+  <a class="path-btn index" href="labs-index.html">
+    <span class="p-text"><span class="p-kicker">All labs</span><span class="p-title">🏠 Labs Index</span></span>
+  </a>
+  <a class="path-btn next" href="lab-01-wazuh-siem-windows-detections.html">
+    <span class="p-text"><span class="p-kicker">Next · 01</span><span class="p-title">Wazuh SIEM + Windows Detections</span></span>
+    <span class="p-arrow">→</span>
+  </a>
+</div>
+
+
+<script>
+  const sections = document.querySelectorAll('.section[id]');
+  const links = document.querySelectorAll('nav.toc a[href^="#"]');
+  const map = {};
+  links.forEach(l => map[l.getAttribute('href').slice(1)] = l);
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      const id = entry.target.getAttribute('id');
+      if(entry.isIntersecting){
+        links.forEach(l => l.classList.remove('active'));
+        if(map[id]) map[id].classList.add('active');
+      }
+    });
+  }, { rootMargin: '-15% 0px -70% 0px', threshold: 0 });
+
+  sections.forEach(s => observer.observe(s));
+
+  // ===== Bottom-of-page fallback — last section is short so the observer never fires for it =====
+  window.addEventListener('scroll', () => {
+    const scrollBottom = window.scrollY + window.innerHeight;
+    const pageHeight = document.documentElement.scrollHeight;
+    if(scrollBottom >= pageHeight - 60){
+      const lastLink = links[links.length - 1];
+      if(lastLink && !lastLink.classList.contains('active')){
+        links.forEach(l => l.classList.remove('active'));
+        lastLink.classList.add('active');
+      }
+    }
+  }, { passive: true });
+
+  const toc = document.getElementById('toc');
+  const menuBtn = document.getElementById('menuBtn');
+  const drawerClose = document.getElementById('drawerClose');
+  const backdrop = document.getElementById('tocBackdrop');
+
+  function openDrawer(){
+    toc.classList.add('drawer-open');
+    backdrop.classList.add('show');
+    menuBtn.setAttribute('aria-expanded','true');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeDrawer(){
+    toc.classList.remove('drawer-open');
+    backdrop.classList.remove('show');
+    menuBtn.setAttribute('aria-expanded','false');
+    document.body.style.overflow = '';
+  }
+
+  menuBtn.addEventListener('click', () => {
+    toc.classList.contains('drawer-open') ? closeDrawer() : openDrawer();
+  });
+  drawerClose.addEventListener('click', closeDrawer);
+  backdrop.addEventListener('click', closeDrawer);
+  links.forEach(l => l.addEventListener('click', closeDrawer));
+  window.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeDrawer(); });
+
+  window.addEventListener('resize', () => {
+    if(window.innerWidth > 900) closeDrawer();
+  });
+
+  document.querySelectorAll('.si-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const panel = document.getElementById(btn.getAttribute('data-target'));
+      if(!panel) return;
+      const isOpen = panel.classList.toggle('open');
+      btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+  });
+
+  // ===== Collapse / expand accordion (exam, SOC, Cloud, glossary, comparison, vocab) =====
+  (function(){
+    const GROUP_IDS = ['exam', 'soc', 'cloud', 'glossary', 'comparison', 'sinhala-vocab'];
+    const items = GROUP_IDS.map(id => ({
+      id,
+      section: document.getElementById(id),
+      body: document.getElementById(`${id}-body`),
+      toggle: document.getElementById(`${id}-toggle`),
+    })).filter(item => item.section && item.body && item.toggle);
+
+    function openItem(item, animate){
+      item.body.classList.add('open');
+      item.toggle.setAttribute('aria-expanded', 'true');
+      if(animate === false){
+        item.body.style.maxHeight = 'none';
+        return;
+      }
+      item.body.style.maxHeight = item.body.scrollHeight + 'px';
+      const onEnd = (e) => {
+        if(e.propertyName !== 'max-height') return;
+        item.body.style.maxHeight = 'none';
+        item.body.removeEventListener('transitionend', onEnd);
+      };
+      item.body.addEventListener('transitionend', onEnd);
+    }
+
+    function closeItem(item){
+      if(!item.body.classList.contains('open')) return;
+      const current = item.body.scrollHeight;
+      item.body.style.maxHeight = current + 'px';
+      // force reflow so the browser registers the numeric max-height before collapsing to 0
+      // eslint-disable-next-line no-unused-expressions
+      item.body.offsetHeight;
+      requestAnimationFrame(() => {
+        item.body.style.maxHeight = '0px';
+      });
+      item.body.classList.remove('open');
+      item.toggle.setAttribute('aria-expanded', 'false');
+    }
+
+    function toggleItem(id){
+      const clicked = items.find(i => i.id === id);
+      if(!clicked) return;
+      const isOpen = clicked.body.classList.contains('open');
+      items.forEach(i => { if(i !== clicked) closeItem(i); });
+      if(isOpen){
+        closeItem(clicked);
+      } else {
+        openItem(clicked, true);
+      }
+    }
+
+    items.forEach(item => {
+      item.toggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleItem(item.id);
+      });
+      item.section.querySelector('.kicker').addEventListener('click', () => toggleItem(item.id));
+    });
+
+    // Expose so the search engine (and TOC deep-links) can force a section open
+    window.__openAccordionSection = function(id){
+      const item = items.find(i => i.id === id);
+      if(!item) return;
+      if(!item.body.classList.contains('open')){
+        items.forEach(i => { if(i !== item) closeItem(i); });
+        openItem(item, true);
+      }
+    };
+
+    // Deep-link support: if the page loads with #exam / #glossary / etc. in the URL,
+    // open that section and scroll to it.
+    if(location.hash){
+      const targetId = location.hash.slice(1);
+      if(GROUP_IDS.includes(targetId)){
+        window.__openAccordionSection(targetId);
+        requestAnimationFrame(() => {
+          document.getElementById(targetId).scrollIntoView({ block:'start' });
+        });
+      }
+    }
+
+    // TOC links to these sections should open them (and scroll) instead of
+    // just jumping to a collapsed, empty-looking header.
+    document.querySelectorAll('nav.toc a[href^="#"]').forEach(link => {
+      const id = link.getAttribute('href').slice(1);
+      if(!GROUP_IDS.includes(id)) return;
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.__openAccordionSection(id);
+        history.pushState(null, '', '#' + id);
+        requestAnimationFrame(() => {
+          document.getElementById(id).scrollIntoView({ behavior:'smooth', block:'start' });
+        });
+      });
+    });
+  })();
+
+  // ===== In-page "find" search (shared engine — drives both the sidebar/mobile-menu box and the hero box) =====
+  (function(){
+    const mainEl = document.querySelector('main');
+    let matches = [];
+    let activeIndex = -1;
+    const uiSets = [];
+
+    function clearHighlights(){
+      mainEl.querySelectorAll('mark.search-hit').forEach(mark => {
+        const parent = mark.parentNode;
+        parent.replaceChild(document.createTextNode(mark.textContent), mark);
+        parent.normalize();
+      });
+      matches = [];
+      activeIndex = -1;
+    }
+
+    function walkAndHighlight(query){
+      const lowerQuery = query.toLowerCase();
+      const walker = document.createTreeWalker(mainEl, NodeFilter.SHOW_TEXT, {
+        acceptNode(node){
+          if(!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+          const tag = node.parentElement ? node.parentElement.tagName : '';
+          if(tag === 'SCRIPT' || tag === 'STYLE') return NodeFilter.FILTER_REJECT;
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      });
+
+      const textNodes = [];
+      let n;
+      while((n = walker.nextNode())) textNodes.push(n);
+
+      textNodes.forEach(node => {
+        const text = node.nodeValue;
+        const lowerText = text.toLowerCase();
+        if(!lowerText.includes(lowerQuery)) return;
+
+        const frag = document.createDocumentFragment();
+        let lastIndex = 0;
+        let idx = lowerText.indexOf(lowerQuery);
+
+        while(idx !== -1){
+          if(idx > lastIndex){
+            frag.appendChild(document.createTextNode(text.slice(lastIndex, idx)));
+          }
+          const mark = document.createElement('mark');
+          mark.className = 'search-hit';
+          mark.textContent = text.slice(idx, idx + query.length);
+          frag.appendChild(mark);
+          matches.push(mark);
+          lastIndex = idx + query.length;
+          idx = lowerText.indexOf(lowerQuery, lastIndex);
+        }
+        if(lastIndex < text.length){
+          frag.appendChild(document.createTextNode(text.slice(lastIndex)));
+        }
+        node.parentNode.replaceChild(frag, node);
+      });
+    }
+
+    function revealMatch(mark){
+      const panel = mark.closest('.si-panel');
+      if(panel && !panel.classList.contains('open')){
+        panel.classList.add('open');
+        const toggleBtn = document.querySelector(`.si-toggle[data-target="${panel.id}"]`);
+        if(toggleBtn) toggleBtn.setAttribute('aria-expanded', 'true');
+      }
+
+      const collapseBody = mark.closest('.collapse-body');
+      if(collapseBody && !collapseBody.classList.contains('open') && window.__openAccordionSection){
+        const sectionId = collapseBody.closest('.section')?.id;
+        if(sectionId) window.__openAccordionSection(sectionId);
+      }
+    }
+
+    function updateAllUI(){
+      uiSets.forEach(ui => {
+        if(matches.length === 0){
+          ui.navBar.classList.remove('show');
+          ui.prevBtn.disabled = true;
+          ui.nextBtn.disabled = true;
+          ui.countLabel.textContent = '0 / 0';
+        } else {
+          ui.navBar.classList.add('show');
+          ui.prevBtn.disabled = false;
+          ui.nextBtn.disabled = false;
+          ui.countLabel.textContent = `${activeIndex + 1} / ${matches.length}`;
+        }
+      });
+    }
+
+    function syncValue(value){
+      uiSets.forEach(ui => {
+        if(ui.input.value !== value) ui.input.value = value;
+        ui.wrap.classList.toggle('has-query', value.trim().length > 0);
+      });
+    }
+
+    function goToMatch(index){
+      if(matches.length === 0) return;
+      if(activeIndex >= 0 && matches[activeIndex]) matches[activeIndex].classList.remove('active');
+      activeIndex = ((index % matches.length) + matches.length) % matches.length;
+      const mark = matches[activeIndex];
+      revealMatch(mark);
+      mark.classList.add('active');
+      mark.scrollIntoView({ behavior:'smooth', block:'center' });
+      updateAllUI();
+    }
+
+    function runSearch(rawQuery){
+      clearHighlights();
+      const query = rawQuery.trim();
+      syncValue(rawQuery);
+
+      if(query.length < 2){
+        updateAllUI();
+        return;
+      }
+
+      walkAndHighlight(query);
+
+      if(matches.length === 0){
+        updateAllUI();
+        return;
+      }
+
+      goToMatch(0);
+    }
+
+    function resetAll(){
+      syncValue('');
+      clearHighlights();
+      updateAllUI();
+    }
+
+    function bindUI(ui){
+      uiSets.push(ui);
+      let debounceTimer = null;
+
+      ui.input.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        const val = ui.input.value;
+        debounceTimer = setTimeout(() => runSearch(val), 200);
+      });
+
+      ui.input.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter'){
+          e.preventDefault();
+          if(matches.length > 0) goToMatch(activeIndex + (e.shiftKey ? -1 : 1));
+        }
+        if(e.key === 'Escape'){
+          resetAll();
+          ui.input.blur();
+        }
+      });
+
+      ui.prevBtn.addEventListener('click', () => goToMatch(activeIndex - 1));
+      ui.nextBtn.addEventListener('click', () => goToMatch(activeIndex + 1));
+      ui.clearBtn.addEventListener('click', () => {
+        resetAll();
+        ui.input.focus();
+      });
+    }
+
+    bindUI({
+      input: document.getElementById('pageSearchInput'),
+      clearBtn: document.getElementById('pageSearchClear'),
+      wrap: document.getElementById('pageSearchInput').closest('.toc-search'),
+      navBar: document.getElementById('searchNav'),
+      countLabel: document.getElementById('searchCount'),
+      prevBtn: document.getElementById('searchPrev'),
+      nextBtn: document.getElementById('searchNext'),
+    });
+
+    bindUI({
+      input: document.getElementById('heroFindInput'),
+      clearBtn: document.getElementById('heroFindClear'),
+      wrap: document.getElementById('heroFindWrap'),
+      navBar: document.getElementById('heroFindNav'),
+      countLabel: document.getElementById('heroSearchCount'),
+      prevBtn: document.getElementById('heroSearchPrev'),
+      nextBtn: document.getElementById('heroSearchNext'),
+    });
+
+    window.addEventListener('keydown', (e) => {
+      const focusedIsSearch = uiSets.some(ui => document.activeElement === ui.input);
+      if(e.key === '/' && !focusedIsSearch && !e.metaKey && !e.ctrlKey){
+        e.preventDefault();
+        document.getElementById('heroFindInput').focus();
+      }
+    });
+  })();
+
+  // ===== Global topic search (jump to any lab guide from this page's hero) =====
+  (function(){
+    const TOPICS = [
+    { num:'00', title:'Lab Environment Overview', href:'lab-00-environment-overview.html' },
+    { num:'01', title:'Wazuh SIEM + Windows Detections', href:'lab-01-wazuh-siem-windows-detections.html' },
+    { num:'02', title:'pfSense + Suricata + Log Forwarding', href:'lab-02-pfsense-suricata-log-forwarding.html' },
+    { num:'03', title:'DVWA + WAF: SQL Injection Detection', href:'lab-03-dvwa-waf-sqli-detection.html' },
+    { num:'04', title:'Attack Simulation & Detection', href:'lab-04-attack-simulation-detection.html' },
+    { num:'05', title:'Phishing Email Investigation', href:'lab-05-phishing-email-investigation.html' },
+    { num:'06', title:'PCAP Investigation', href:'lab-06-pcap-investigation.html' }
+    ];
+    const CURRENT_HREF = 'lab-00-environment-overview.html';
+
+    const jumpInput = document.getElementById('topicJump');
+    const jumpWrap = document.getElementById('siteSearch');
+    const jumpClear = document.getElementById('jumpClear');
+    const dropdown = document.getElementById('jumpDropdown');
+
+    let results = [];
+    let hlIndex = -1;
+
+    function render(query){
+      const q = query.trim().toLowerCase();
+      if(q === ''){
+        dropdown.classList.remove('show');
+        dropdown.innerHTML = '';
+        results = [];
+        hlIndex = -1;
+        return;
+      }
+
+      results = TOPICS.filter(t => t.title.toLowerCase().includes(q)).slice(0, 8);
+      hlIndex = -1;
+
+      if(results.length === 0){
+        dropdown.innerHTML = '<div class="s-empty">No labs match your search</div>';
+      } else {
+        dropdown.innerHTML = results.map((t, i) => {
+          const current = t.href === CURRENT_HREF ? ' (this page)' : '';
+          return `<a class="s-item" href="${t.href}" data-idx="${i}"><span class="s-num">${t.num}</span><span>${t.title}${current}</span></a>`;
+        }).join('');
+      }
+      dropdown.classList.add('show');
+    }
+
+    function setHighlight(i){
+      const items = dropdown.querySelectorAll('.s-item');
+      items.forEach(el => el.classList.remove('hl'));
+      if(i >= 0 && items[i]){
+        items[i].classList.add('hl');
+        items[i].scrollIntoView({ block:'nearest' });
+      }
+      hlIndex = i;
+    }
+
+    jumpInput.addEventListener('input', () => {
+      jumpWrap.classList.toggle('has-query', jumpInput.value.trim().length > 0);
+      render(jumpInput.value);
+    });
+
+    jumpInput.addEventListener('keydown', (e) => {
+      if(e.key === 'ArrowDown'){
+        e.preventDefault();
+        if(results.length) setHighlight((hlIndex + 1) % results.length);
+      } else if(e.key === 'ArrowUp'){
+        e.preventDefault();
+        if(results.length) setHighlight((hlIndex - 1 + results.length) % results.length);
+      } else if(e.key === 'Enter'){
+        if(hlIndex >= 0 && results[hlIndex]){
+          window.location.href = results[hlIndex].href;
+        } else if(results.length > 0){
+          window.location.href = results[0].href;
+        }
+      } else if(e.key === 'Escape'){
+        jumpInput.value = '';
+        jumpWrap.classList.remove('has-query');
+        render('');
+        jumpInput.blur();
+      }
+    });
+
+    jumpClear.addEventListener('click', () => {
+      jumpInput.value = '';
+      jumpWrap.classList.remove('has-query');
+      render('');
+      jumpInput.focus();
+    });
+
+    document.addEventListener('click', (e) => {
+      if(!jumpWrap.contains(e.target)){
+        dropdown.classList.remove('show');
+      }
+    });
+  })();
+</script>
+
+<script>
+(function(){
+  const imgs = Array.from(document.querySelectorAll('.figure img'));
+  const overlay = document.createElement('div');
+  overlay.className = 'lb-overlay';
+  overlay.setAttribute('role','dialog'); overlay.setAttribute('aria-modal','true'); overlay.setAttribute('aria-label','Enlarged image');
+  overlay.innerHTML = '<button class="lb-close" aria-label="Close image">&times;</button>' +
+    '<button class="lb-nav lb-prev" aria-label="Previous image">&#8249;</button>' +
+    '<button class="lb-nav lb-next" aria-label="Next image">&#8250;</button>' +
+    '<img alt=""><div class="lb-caption"></div><div class="lb-count"></div>';
+  document.body.appendChild(overlay);
+  const bigImg = overlay.querySelector('img');
+  const cap = overlay.querySelector('.lb-caption');
+  const count = overlay.querySelector('.lb-count');
+  let idx = 0;
+  function show(i){
+    idx = (i + imgs.length) % imgs.length;
+    const img = imgs[idx];
+    bigImg.src = img.currentSrc || img.src;
+    bigImg.alt = img.alt || '';
+    const fc = img.closest('.figure') && img.closest('.figure').querySelector('figcaption');
+    cap.textContent = fc ? fc.textContent : (img.alt || '');
+    count.textContent = (idx + 1) + ' / ' + imgs.length;
+  }
+  function open(i){
+    show(i);
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function close(){
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  const isOpen = () => overlay.classList.contains('open');
+  imgs.forEach((img, i) => img.addEventListener('click', () => open(i)));
+  overlay.addEventListener('click', close);
+  overlay.querySelector('.lb-prev').addEventListener('click', e => { e.stopPropagation(); show(idx - 1); });
+  overlay.querySelector('.lb-next').addEventListener('click', e => { e.stopPropagation(); show(idx + 1); });
+  overlay.querySelector('.lb-close').addEventListener('click', e => { e.stopPropagation(); close(); });
+  window.addEventListener('keydown', e => {
+    if(!isOpen()) return;
+    if(e.key === 'Escape') close();
+    else if(e.key === 'ArrowLeft') show(idx - 1);
+    else if(e.key === 'ArrowRight') show(idx + 1);
+  });
+  // Swipe left / right on touch screens
+  let sx = null, sy = null;
+  overlay.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+  overlay.addEventListener('touchend', e => {
+    if(sx === null) return;
+    const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+    sx = sy = null;
+    if(Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5){
+      e.preventDefault();
+      show(dx < 0 ? idx + 1 : idx - 1);
+      overlay._swiped = true; setTimeout(() => overlay._swiped = false, 400);
+    }
+  });
+  // ignore the synthetic click that follows a swipe so it doesn't close the viewer
+  overlay.addEventListener('click', e => { if(overlay._swiped){ e.stopImmediatePropagation(); } }, true);
+})();
+</script>
+
+<script>// ===== Copy buttons for code blocks =====
+(function(){
+  document.querySelectorAll('pre.code').forEach(pre => {
+    const btn = document.createElement('button');
+    btn.type = 'button'; btn.className = 'copy-btn'; btn.textContent = 'Copy';
+    btn.setAttribute('aria-label', 'Copy code');
+    btn.addEventListener('click', () => {
+      const text = pre.querySelector('code').textContent;
+      const done = () => { btn.textContent = 'Copied'; btn.classList.add('done'); setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('done'); }, 1500); };
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(done).catch(() => {});
+      } else {
+        const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+        try{ document.execCommand('copy'); done(); }catch(e){} document.body.removeChild(ta);
+      }
+    });
+    pre.appendChild(btn);
+  });
+})();
+</script>
+
+</body>
+</html>
