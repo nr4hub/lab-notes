@@ -1,0 +1,1798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab 01 — Wazuh SIEM + Windows Detections — SOC Home Lab Notes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;500&family=Noto+Sans+Sinhala:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue:#8ab4f8; --red:#f28b82; --yellow:#fdd663; --green:#81c995; --purple:#c58af9;
+    --ink:#e8eaed; --sub:#9aa0a6; --paper:#232427; --bg:#131417; --line:#3c4043;
+    --card-shadow: 0 1px 2px rgba(0,0,0,.5), 0 2px 10px rgba(0,0,0,.4);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{ margin:0; font-family:'Roboto', Arial, sans-serif; background:var(--bg); color:var(--ink); line-height:1.65; overflow-x:hidden; }
+  h1,h2,h3,.slide-title{ font-family:'Google Sans','Roboto',Arial,sans-serif; }
+  img{max-width:100%;}
+  a:focus-visible, button:focus-visible{ outline:2px solid #1a73e8; outline-offset:2px; }
+  .si{ font-family:'Noto Sans Sinhala','Roboto',sans-serif; }
+
+  .mobile-bar{ display:none; position:sticky; top:0; z-index:40; align-items:center; justify-content:space-between; background:var(--paper); border-bottom:1px solid var(--line); padding:12px 16px; }
+  .mobile-bar .m-title{ font-family:'Google Sans',sans-serif; font-weight:700; font-size:14.5px; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .menu-btn{ display:flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:10px; border:1px solid var(--line); background:var(--paper); flex:none; cursor:pointer; padding:0; }
+  .menu-btn span, .menu-btn span::before, .menu-btn span::after{ content:""; display:block; width:18px; height:2px; background:var(--ink); position:relative; transition:transform .2s ease, opacity .2s ease; }
+  .menu-btn span::before{ position:absolute; top:-6px; } .menu-btn span::after{ position:absolute; top:6px; }
+  .menu-btn[aria-expanded="true"] span{ background:transparent; }
+  .menu-btn[aria-expanded="true"] span::before{ top:0; transform:rotate(45deg); background:var(--ink); }
+  .menu-btn[aria-expanded="true"] span::after{ top:0; transform:rotate(-45deg); background:var(--ink); }
+  .toc-backdrop{ display:none; position:fixed; inset:0; background:rgba(32,33,36,.45); z-index:45; }
+  .toc-backdrop.show{ display:block; }
+
+  .hero{ background:linear-gradient(120deg,#1a73e8 0%, #7B61FF 45%, #EA4335 100%); color:#fff; padding:56px 24px 40px; position:relative; overflow:hidden; }
+  .hero::after{ content:""; position:absolute; right:-60px; top:-60px; width:280px;height:280px;border-radius:50%; background:rgba(255,255,255,.08); pointer-events:none; }
+  .hero::before{ content:""; position:absolute; left:10%; bottom:-120px; width:220px;height:220px;border-radius:50%; background:rgba(255,255,255,.07); pointer-events:none; }
+  .hero-inner{max-width:1100px;margin:0 auto;position:relative;z-index:1;}
+  .eyebrow{ display:inline-block; font-size:12px; letter-spacing:.14em; text-transform:uppercase; background:rgba(255,255,255,.18); padding:6px 12px; border-radius:20px; margin-bottom:18px; font-weight:500; }
+  .hero h1{font-size:34px; margin:0 0 12px; font-weight:700; line-height:1.2;}
+  .hero p.lead{font-size:16.5px; max-width:660px; opacity:.95; margin:0 0 20px;}
+  .hero-meta{display:flex; gap:22px; flex-wrap:wrap; font-size:13.5px; opacity:.92; margin-bottom:6px;}
+  .hero-meta span{display:flex; align-items:center; gap:8px;}
+  .dot{width:6px;height:6px;border-radius:50%;background:#fff;display:inline-block; flex:none;}
+
+  .hero-search-row{ margin-top:22px; display:flex; align-items:flex-start; gap:16px; flex-wrap:wrap; }
+
+  .site-search{ position:relative; z-index:2; flex:1 1 300px; }
+  .site-search input{
+    width:100%; padding:13px 16px 13px 44px; border-radius:14px;
+    border:1px solid rgba(255,255,255,.32); background:rgba(255,255,255,.14);
+    color:#fff; font-size:14.5px; backdrop-filter:blur(6px); box-sizing:border-box;
+  }
+  .site-search input::placeholder{ color:rgba(255,255,255,.78); }
+  .site-search input:focus{ outline:none; background:rgba(255,255,255,.22); border-color:#fff; }
+  .site-search .s-icon{
+    position:absolute; left:15px; top:22px; transform:translateY(-50%);
+    font-size:14px; opacity:.85; pointer-events:none;
+  }
+  .site-search .s-clear{
+    position:absolute; right:8px; top:22px; transform:translateY(-50%);
+    width:26px; height:26px; border-radius:8px; border:none; background:rgba(255,255,255,.16);
+    color:#fff; font-size:13px; cursor:pointer; display:none; align-items:center; justify-content:center;
+  }
+  .site-search.has-query .s-clear{ display:flex; }
+  .site-search .s-dropdown{
+    display:none; position:absolute; top:calc(100% + 8px); left:0; right:0;
+    background:var(--paper); border:1px solid var(--line); border-radius:14px;
+    box-shadow:var(--card-shadow); max-height:320px; overflow:auto; padding:6px;
+  }
+  .site-search .s-dropdown.show{ display:block; }
+  .site-search .s-item{
+    display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:9px;
+    color:var(--ink); text-decoration:none; font-size:13.5px; cursor:pointer;
+  }
+  .site-search .s-item:hover, .site-search .s-item.hl{ background:#2c2d30; }
+  .site-search .s-item .s-num{
+    font-family:'Roboto Mono',monospace; font-size:11px; color:var(--sub);
+    background:#1a1b1e; border-radius:6px; padding:2px 6px; flex:none; min-width:24px; text-align:center;
+  }
+  .site-search .s-empty{ padding:14px 10px; font-size:13px; color:var(--sub); text-align:center; }
+
+  .hero-find-col{ flex:1 1 300px; }
+  .hero-find-col .site-search.find-page-search{ max-width:none; }
+  .find-page-nav{
+    display:none; align-items:center; justify-content:space-between; gap:8px;
+    margin-top:8px; font-size:12px; color:rgba(255,255,255,.85);
+  }
+  .find-page-nav.show{ display:flex; }
+  .find-page-nav .snav-btns{ display:flex; gap:6px; }
+  .find-page-nav button{
+    width:26px; height:26px; border-radius:8px; border:1px solid rgba(255,255,255,.32);
+    background:rgba(255,255,255,.14); color:#fff; font-size:13px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .find-page-nav button:hover{ background:rgba(255,255,255,.24); }
+  .find-page-nav button:disabled{ opacity:.4; cursor:default; }
+
+  .path-nav{ max-width:1100px; margin:26px auto 0; position:relative; z-index:1; display:grid; grid-template-columns:1fr auto 1fr; gap:12px; align-items:stretch; }
+  .path-btn{ display:flex; align-items:center; gap:10px; text-decoration:none; color:#fff; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.28); border-radius:14px; padding:10px 16px; backdrop-filter:blur(6px); transition:background .15s ease, transform .15s ease; }
+  .path-btn:hover{ background:rgba(255,255,255,.24); transform:translateY(-1px); }
+  .path-btn .p-arrow{ font-size:16px; flex:none; }
+  .path-btn .p-text{ display:flex; flex-direction:column; line-height:1.25; min-width:0; }
+  .path-btn .p-kicker{ font-size:10px; letter-spacing:.1em; text-transform:uppercase; opacity:.8; }
+  .path-btn .p-title{ font-size:13.5px; font-weight:600; font-family:'Google Sans',sans-serif; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .path-btn.next{ justify-content:flex-end; text-align:right; }
+  .path-btn.next .p-text{ align-items:flex-end; }
+  .path-btn.index{ justify-content:center; text-align:center; background:rgba(0,0,0,.22); border-color:rgba(255,255,255,.28); padding:10px 18px; }
+  .path-btn.index .p-text{ align-items:center; }
+
+  .layout{ max-width:1180px; margin:-8px auto 60px; padding:0 24px; display:grid; grid-template-columns:250px 1fr; gap:32px; align-items:start; }
+  nav.toc{ background:var(--paper); border-radius:16px; box-shadow:var(--card-shadow); padding:18px 10px; position:sticky; top:20px; max-height:calc(100vh - 40px); overflow:auto; }
+  nav.toc .toc-head{ font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--sub); padding:6px 14px 10px; font-weight:500; display:flex; align-items:center; justify-content:space-between; }
+  nav.toc a{ display:block; padding:9px 14px; border-radius:10px; color:var(--ink); text-decoration:none; font-size:13.5px; border-left:3px solid transparent; }
+  nav.toc a:hover{background:#2c2d30;}
+  nav.toc a.active{background:#2a3a55; color:#a8c7fa; border-left-color:var(--blue); font-weight:500;}
+  nav.toc .toc-divider{ margin:10px 10px 6px; border-top:1px solid var(--line); padding-top:10px; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--sub); font-weight:500; }
+  main{min-width:0;}
+
+  /* ===== In-page search (lives inside nav.toc — shared by desktop sidebar + mobile drawer) ===== */
+  .toc-search{ padding:4px 10px 12px; }
+  .toc-search-box{ position:relative; }
+  .toc-search input{
+    width:100%; padding:9px 34px 9px 32px; border-radius:10px; border:1px solid var(--line);
+    background:#1a1b1e; color:var(--ink); font-size:13px; box-sizing:border-box;
+  }
+  .toc-search input::placeholder{ color:var(--sub); }
+  .toc-search input:focus{ outline:none; border-color:#5f6368; }
+  .toc-search .s-icon{ position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:12px; opacity:.7; pointer-events:none; }
+  .toc-search .s-clear{
+    position:absolute; right:5px; top:50%; transform:translateY(-50%);
+    width:22px; height:22px; border-radius:6px; border:none; background:#2c2d30; color:var(--sub);
+    font-size:11px; cursor:pointer; display:none; align-items:center; justify-content:center;
+  }
+  .toc-search.has-query .s-clear{ display:flex; }
+  .toc-search-nav{
+    display:none; align-items:center; justify-content:space-between; gap:8px;
+    margin-top:8px; font-size:11.5px; color:var(--sub);
+  }
+  .toc-search-nav.show{ display:flex; }
+  .toc-search-nav .snav-btns{ display:flex; gap:4px; }
+  .toc-search-nav button{
+    width:24px; height:24px; border-radius:6px; border:1px solid var(--line); background:#1a1b1e;
+    color:var(--ink); font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .toc-search-nav button:hover{ background:#2c2d30; }
+  .toc-search-nav button:disabled{ opacity:.4; cursor:default; }
+
+  mark.search-hit{ background:#fdd663; color:#131417; padding:0 2px; border-radius:3px; }
+  mark.search-hit.active{ background:#ff9d45; box-shadow:0 0 0 2px rgba(255,157,69,.35); }
+
+  .section{ background:var(--paper); border-radius:18px; box-shadow:var(--card-shadow); padding:34px 38px; margin-bottom:26px; scroll-margin-top:84px; position:sticky; }
+  .section .kicker{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+  .kicker-left{ display:flex; align-items:center; gap:10px; }
+  .num-badge{ width:30px;height:30px;border-radius:9px; display:flex;align-items:center;justify-content:center; color:#fff; font-weight:700; font-size:14px; font-family:'Google Sans',sans-serif; flex:none; line-height:1; }
+  .section h2{font-size:23px; margin:0; font-weight:700; line-height:1.25;}
+  .section p{color:#c7cbd1; font-size:15px; margin:0 0 14px;}
+  .section p:last-child{margin-bottom:0;}
+  .lede{font-size:15.5px; color:#c7cbd1;}
+  .subhead{ font-family:'Google Sans',sans-serif; font-size:15px; font-weight:700; color:#e8eaed; margin:26px 0 10px; display:flex; align-items:center; gap:10px; }
+  .subhead:first-of-type{margin-top:6px;}
+  .subhead .sub-dot{ width:8px; height:8px; border-radius:50%; flex:none; }
+
+  /* ===== Collapse / expand accordion (exam, SOC, Cloud, glossary, comparison, vocab) ===== */
+  .section.collapsible .kicker{ cursor:pointer; user-select:none; }
+  .collapse-toggle{
+    display:flex; align-items:center; justify-content:center; flex:none;
+    width:32px; height:32px; border-radius:9px; border:1px solid var(--line);
+    background:#1a1b1e; color:var(--sub); cursor:pointer; padding:0;
+  }
+  .collapse-toggle:hover{ background:#2c2d30; color:var(--ink); }
+  .collapse-toggle .chevron{ display:inline-block; font-size:13px; transition:transform .25s ease; }
+  .collapse-toggle[aria-expanded="true"] .chevron{ transform:rotate(180deg); }
+  .collapse-body{
+    max-height:0; overflow:hidden; opacity:0;
+    transition:max-height .35s ease, opacity .3s ease;
+  }
+  .collapse-body.open{ opacity:1; }
+
+  .si-toggle{ display:inline-flex; align-items:center; gap:7px; background:#2a2b2e; border:1px solid var(--line); color:#a8c7fa; font-family:'Roboto',sans-serif; font-weight:500; font-size:12.5px; padding:7px 13px; border-radius:20px; cursor:pointer; white-space:nowrap; transition:background .15s ease, border-color .15s ease; }
+  .si-divider{ display:flex; align-items:center; gap:14px; margin:26px 0 0; }
+  .si-divider::before, .si-divider::after{ content:''; flex:1; height:1px; background:var(--line); }
+  .si-toggle:hover{ background:#33343a; border-color:#5f6368; }
+  .si-toggle .flag{ font-size:13px; }
+  .si-toggle .arrow{ display:inline-block; transition:transform .2s ease; font-size:10px; }
+  .si-toggle[aria-expanded="true"] .arrow{ transform:rotate(180deg); }
+  .si-panel{ display:none; background:#1c2b22; border:1px solid #2f5b41; border-left:4px solid var(--green); border-radius:10px; padding:16px 20px; margin-top:14px; font-size:14.5px; color:#d3e9db; }
+  .si-panel.open{ display:block; animation:fadeSlide .18s ease; }
+  .si-panel p{ color:#d3e9db; font-size:14.5px; margin:0 0 10px; }
+  .si-panel p:last-child{ margin-bottom:0; }
+  .si-panel .si-label{ font-family:'Roboto',sans-serif; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:#7cc99a; font-weight:700; margin-bottom:8px; display:block; }
+  @keyframes fadeSlide{ from{opacity:0; transform:translateY(-4px);} to{opacity:1; transform:translateY(0);} }
+
+  .slide{ background:var(--paper); border:1px solid var(--line); border-radius:12px; padding:24px 26px; margin:18px 0; position:relative; }
+  .slide::before{ content:"SLIDE"; position:absolute; top:10px; right:14px; font-size:9px; letter-spacing:.12em; color:#5f6368; font-weight:700; }
+  .slide .slide-title{ color:var(--blue); font-size:19px; font-weight:700; margin:0 0 12px; }
+  .slide ul{margin:0; padding-left:20px;}
+  .slide li{margin-bottom:8px; font-size:14.5px; color:#c7cbd1;}
+  .slide li::marker{color:var(--blue);}
+  .slide.def p{font-size:15px; color:#c7cbd1; margin:0;}
+  .slide-row{display:grid; gap:16px;}
+  .cols-2{grid-template-columns:1fr 1fr;}
+  .cols-3{grid-template-columns:1fr 1fr 1fr;}
+  .slide.accent-blue .slide-title{color:var(--blue);}
+  .slide.accent-red .slide-title{color:var(--red);}
+  .slide.accent-yellow .slide-title{color:#fdd663;}
+  .slide.accent-green .slide-title{color:var(--green);}
+  .slide.accent-purple .slide-title{color:var(--purple);}
+
+  .term{ font-family:'Roboto Mono', monospace; background:#2c2d30; color:#a8c7fa; padding:1px 6px; border-radius:5px; font-size:.92em; }
+
+  .figure{ margin:18px 0; border-radius:14px; overflow:hidden; border:1px solid var(--line); background:#000; }
+  .figure img{ display:block; width:100%; }
+  .figure figcaption{ padding:10px 16px; font-size:12.5px; color:var(--sub); background:#1a1b1e; border-top:1px solid var(--line); }
+  .figure-row{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:18px 0; }
+  .figure-row .figure{ margin:0; }
+
+  .callout{ background:#22344d; border-left:4px solid var(--blue); border-radius:10px; padding:14px 18px; font-size:14px; color:#a8c7fa; margin:16px 0; }
+  .callout.soc{ background:#3a2530; border-left-color:var(--red); color:#f3b8c2; }
+  .callout.cloud{ background:#1c2b3e; border-left-color:var(--purple); color:#d8c4fb; }
+
+  .purpose-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin:18px 0 4px; }
+  .purpose-card{ border-radius:14px; padding:16px 14px; color:#fff; min-height:96px; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 2px 6px rgba(0,0,0,.12); }
+  .purpose-card .p-name{font-family:'Google Sans',sans-serif; font-weight:700; font-size:14.5px;}
+  .purpose-card .p-focus{font-size:11.5px; opacity:.92; margin-top:6px;}
+  .p1{background:#4285F4;} .p2{background:#34A853;} .p3{background:#F09300;} .p4{background:#7B61FF;}
+
+  .glossary{display:grid; grid-template-columns:1fr 1fr; gap:0 30px;}
+  .g-item{padding:12px 0; border-bottom:1px solid var(--line);}
+  .g-item dt{font-family:'Google Sans',sans-serif; font-weight:700; font-size:14px; color:#a8c7fa;}
+  .g-item dd{margin:4px 0 0; font-size:13.5px; color:#c7cbd1;}
+
+  /* ===== Sinhala Vocabulary Glossary ===== */
+  .vocab-grid{ display:flex; flex-direction:column; gap:22px; margin-top:6px; }
+  .vocab-card{ background:#1a1b1e; border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+  .vocab-header{ display:flex; align-items:center; gap:14px; padding:18px 22px 14px; border-bottom:1px solid var(--line); background:#202124; }
+  .vocab-word{ font-family:'Google Sans',sans-serif; font-size:21px; font-weight:700; color:#a8c7fa; }
+  .vocab-pos{ font-size:12px; color:var(--sub); font-style:italic; background:#2c2d30; padding:3px 9px; border-radius:20px; margin-left:4px; align-self:center; }
+  .vocab-body{ padding:16px 22px; }
+  .vocab-meanings{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+  .vocab-en{ background:#1c2b3e; border-left:3px solid var(--blue); border-radius:8px; padding:12px 14px; }
+  .vocab-si{ background:#1c2b22; border-left:3px solid var(--green); border-radius:8px; padding:12px 14px; }
+  .vocab-lang-label{ font-size:10px; letter-spacing:.12em; text-transform:uppercase; font-weight:700; margin-bottom:6px; display:block; }
+  .vocab-en .vocab-lang-label{ color:#5b9cf8; }
+  .vocab-si .vocab-lang-label{ color:#7cc99a; }
+  .vocab-en p{ color:#a8c7fa; font-size:13.5px; margin:0; line-height:1.55; }
+  .vocab-si p{ color:#d3e9db; font-size:14.5px; margin:0; line-height:1.6; font-family:'Noto Sans Sinhala','Roboto',sans-serif; }
+  .vocab-sentences-head{ font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--sub); font-weight:700; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+  .vocab-sentences-head::after{ content:''; flex:1; height:1px; background:var(--line); }
+  .vocab-sentences{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:7px; }
+  .vocab-sentences li{ display:flex; gap:10px; align-items:flex-start; font-size:13.5px; color:#c7cbd1; line-height:1.55; }
+  .vocab-tag{ flex:none; font-size:9.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; padding:2px 7px; border-radius:12px; margin-top:2px; white-space:nowrap; }
+  .tag-daily{ background:#2a2b2e; color:#9aa0a6; }
+  .tag-cyber{ background:#3a2530; color:#f3b8c2; }
+  .tag-net{ background:#1c2b3e; color:#a8c7fa; }
+  .tag-hw{ background:#2b2510; color:#fdd663; }
+  .tag-sw{ background:#1c2b22; color:#81c995; }
+  .vocab-hl{ color:#fff; font-weight:600; }
+
+  .exam-list{ list-style:none; margin:0; padding:0; }
+  .exam-list li{ display:flex; gap:12px; align-items:flex-start; padding:12px 4px; border-bottom:1px solid var(--line); font-size:14.5px; color:#dfe1e5; }
+  .exam-list li:last-child{ border-bottom:none; }
+  .exam-list .chk{ flex:none; width:20px; height:20px; border-radius:6px; border:2px solid var(--yellow); margin-top:2px; }
+  .exam-list b{ color:#fff; }
+
+  .role-card{ border:1px solid var(--line); border-radius:14px; padding:20px 22px; margin-bottom:16px; background:#1a1b1e; }
+  .role-card:last-child{ margin-bottom:0; }
+  .role-card .role-title{ display:flex; align-items:center; gap:10px; font-family:'Google Sans',sans-serif; font-weight:700; font-size:15.5px; margin-bottom:8px; }
+  .role-card .role-title .ico{ width:26px; height:26px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:13px; flex:none; color:#fff; }
+  .role-card p{ font-size:14.5px; color:#c7cbd1; margin:0; }
+
+  table.gtable{ width:100%; border-collapse:collapse; margin-top:6px; font-size:14px; min-width:480px; }
+  table.gtable th{ text-align:left; font-family:'Google Sans',sans-serif; font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--sub); padding:10px 14px; border-bottom:2px solid var(--line); }
+  table.gtable td{ padding:12px 14px; border-bottom:1px solid var(--line); color:#dfe1e5; vertical-align:top; }
+  table.gtable tr:last-child td{ border-bottom:none; }
+  table.gtable td.acr{ font-family:'Roboto Mono',monospace; color:var(--blue); font-weight:700; white-space:nowrap; }
+  table.gtable td.term-full{ font-weight:600; color:#fff; white-space:nowrap; }
+
+  .table-wrap{ overflow-x:auto; margin:8px 0 4px; border:1px solid var(--line); border-radius:12px; }
+  table.ctable{ width:100%; border-collapse:collapse; font-size:13.5px; min-width:560px; }
+  table.ctable th{ background:#1a1b1e; text-align:left; font-family:'Google Sans',sans-serif; font-size:12px; color:#a8c7fa; padding:12px 14px; border-bottom:1px solid var(--line); white-space:nowrap; }
+  table.ctable td{ padding:12px 14px; border-bottom:1px solid var(--line); color:#c7cbd1; }
+  table.ctable tr:last-child td{ border-bottom:none; }
+  table.ctable td.row-head{ font-weight:700; color:#fff; white-space:nowrap; }
+  table.ctable tr:hover td{ background:#1e1f22; }
+
+  footer{ text-align:center; color:var(--sub); font-size:12.5px; padding:20px 0 50px; }
+  .back-top{ display:inline-block; margin-top:10px; font-size:12px; color:var(--blue); text-decoration:none; }
+
+  .bottom-nav{ max-width:1180px; margin:0 auto 40px; padding:0 24px; display:grid; grid-template-columns:1fr auto 1fr; gap:12px; }
+  .bottom-nav .path-btn{ color:var(--ink); background:var(--paper); border:1px solid var(--line); }
+  .bottom-nav .path-btn:hover{ background:#2c2d30; }
+  .bottom-nav .path-btn.index{ background:#1a2a45; border-color:#2a3a55; }
+
+  @media (max-width:900px){
+    .hero{padding:40px 20px 30px;} .hero h1{font-size:27px;} .hero p.lead{font-size:15px;}
+    .hero-search-row{ display:block; }
+    .hero-find-col{ margin-top:10px; }
+    .path-nav{grid-template-columns:1fr; }
+    .path-btn.prev, .path-btn.next{ justify-content:center; text-align:center; }
+    .path-btn.prev .p-text, .path-btn.next .p-text{ align-items:center; }
+    .layout{margin-top:8px; grid-template-columns:1fr; gap:0; padding:0 16px;}
+    nav.toc{display:none;}
+    .section{padding:26px 22px; border-radius:16px;}
+    .cols-3{grid-template-columns:1fr 1fr;}
+    .purpose-grid{grid-template-columns:repeat(2,1fr);}
+    .glossary{grid-template-columns:1fr;}
+    .figure-row{grid-template-columns:1fr;}
+    .mobile-bar{display:flex;}
+    .bottom-nav{grid-template-columns:1fr;}
+  }
+  @media (max-width:560px){
+    .hero{padding:32px 18px 26px;} .hero h1{font-size:22px;} .hero p.lead{font-size:14px;}
+    .eyebrow{font-size:10.5px; padding:5px 10px; margin-bottom:14px;}
+    .hero-meta{flex-direction:column; gap:8px; font-size:12px;}
+    .layout{padding:0 12px;}
+    .section{padding:20px 16px; margin-bottom:16px;}
+    .section h2{font-size:18px;}
+    .section .kicker{gap:8px;}
+    .num-badge{width:26px;height:26px;font-size:12px;border-radius:8px;}
+    .slide{padding:18px 16px;}
+    .slide .slide-title{font-size:16.5px;}
+    .cols-2,.cols-3{grid-template-columns:1fr;}
+    .purpose-grid{grid-template-columns:1fr 1fr; gap:10px;}
+    .purpose-card{padding:12px 10px; min-height:84px;}
+    .role-card{padding:16px 16px;}
+    .role-card .role-title{font-size:14.5px;}
+    .exam-list li{font-size:14px; padding:11px 2px; gap:10px;}
+    table.gtable, table.ctable{font-size:12.5px;}
+    table.gtable th, table.ctable th{padding:9px 10px;}
+    table.gtable td, table.ctable td{padding:9px 10px;}
+    .subhead{font-size:14px; margin:20px 0 8px;}
+    .callout{padding:12px 14px; font-size:13.5px;}
+  }
+
+  @media (max-width:900px){
+    nav.toc.drawer-open{ display:block; position:fixed; top:0; left:0; bottom:0; z-index:50; width:82%; max-width:320px; max-height:none; border-radius:0; box-shadow:2px 0 24px rgba(0,0,0,.18); padding:18px 8px 24px; animation:slideIn .22s ease; overflow:auto; }
+    nav.toc.drawer-open .toc-head{padding:8px 16px 14px;}
+    nav.toc a{padding:12px 16px; font-size:14.5px;}
+  }
+  @keyframes slideIn{ from{ transform:translateX(-100%); opacity:.4; } to{ transform:translateX(0); opacity:1; } }
+  .drawer-close{ display:none; width:30px; height:30px; border-radius:8px; border:1px solid var(--line); background:var(--paper); align-items:center; justify-content:center; cursor:pointer; font-size:16px; line-height:1; color:var(--sub); flex:none; }
+  nav.toc.drawer-open .drawer-close{display:flex;}
+  @media (max-width:400px){ nav.toc.drawer-open{width:88%;} }
+
+/* ===== Image lightbox (click to enlarge) ===== */
+.figure img{ cursor:zoom-in; }
+.lb-overlay{ position:fixed; inset:0; z-index:1000; display:none; align-items:center; justify-content:center; flex-direction:column; gap:12px; background:rgba(10,11,13,.92); padding:24px; cursor:zoom-out; }
+.lb-overlay.open{ display:flex; animation:lbFade .18s ease; }
+.lb-overlay img{ max-width:96vw; max-height:84vh; object-fit:contain; border-radius:10px; box-shadow:0 8px 40px rgba(0,0,0,.6); background:#fff; animation:lbZoom .2s ease; }
+.lb-caption{ color:#c7cbd1; font-size:13.5px; text-align:center; max-width:90vw; }
+.lb-close{ position:fixed; top:14px; right:16px; width:40px; height:40px; border-radius:50%; border:1px solid #5f6368; background:#2a2b2e; color:#e8eaed; font-size:22px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.lb-close:hover{ background:#3c4043; }
+.lb-nav{ position:fixed; top:50%; transform:translateY(-50%); width:48px; height:48px; border-radius:50%; border:1px solid #5f6368; background:rgba(42,43,46,.92); color:#e8eaed; font-size:26px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:2; padding:0 0 3px; }
+.lb-nav:hover{ background:#3c4043; }
+.lb-prev{ left:14px; } .lb-next{ right:14px; }
+.lb-count{ color:#9aa0a6; font-size:12.5px; letter-spacing:.04em; }
+@media (max-width:700px){
+  .lb-overlay{ padding:16px 12px 92px; }
+  .lb-overlay img{ max-height:68vh; }
+  .lb-nav{ top:auto; bottom:22px; transform:none; width:46px; height:46px; font-size:24px; }
+  .lb-prev{ left:calc(50% - 92px); right:auto; }
+  .lb-next{ right:calc(50% - 92px); left:auto; }
+  .lb-count{ position:fixed; bottom:34px; left:50%; transform:translateX(-50%); font-size:13px; }
+}
+@keyframes lbFade{ from{opacity:0;} to{opacity:1;} }
+@keyframes lbZoom{ from{transform:scale(.94);} to{transform:scale(1);} }
+
+
+/* ===== Lab guide additions ===== */
+pre.code{ position:relative; background:#0f1012; border:1px solid var(--line); border-left:4px solid var(--blue); border-radius:10px; padding:14px 64px 14px 16px; margin:12px 0 16px; overflow-x:auto; font-family:'Roboto Mono',monospace; font-size:13px; line-height:1.6; color:#d7dce2; white-space:pre; tab-size:2; }
+pre.code code{ font-family:inherit; font-size:inherit; background:none; padding:0; color:inherit; }
+.copy-btn{ position:absolute; top:8px; right:8px; padding:4px 10px; font-size:11.5px; font-family:'Roboto',sans-serif; color:var(--sub); background:#1a1b1e; border:1px solid var(--line); border-radius:7px; cursor:pointer; }
+.copy-btn:hover{ background:#2c2d30; color:var(--ink); }
+.copy-btn.done{ color:var(--green); border-color:#2f5b41; }
+.callout.warn{ background:#3a3320; border-left-color:var(--yellow); color:#fdd663; }
+.shot{ border:2px dashed #4a4d52; border-radius:12px; padding:20px 18px; margin:18px 0; text-align:center; color:var(--sub); background:#1a1b1e; font-size:13.5px; }
+.shot b{ color:#c7cbd1; }
+ol.step-list{ counter-reset:step; list-style:none; margin:12px 0 6px; padding:0; }
+ol.step-list > li{ counter-increment:step; position:relative; padding:14px 16px 14px 56px; border:1px solid var(--line); border-radius:12px; margin-bottom:10px; background:#1a1b1e; font-size:14.5px; color:#c7cbd1; }
+ol.step-list > li::before{ content:counter(step); position:absolute; left:15px; top:14px; width:28px; height:28px; border-radius:50%; background:#1a73e8; color:#fff; display:flex; align-items:center; justify-content:center; font-family:'Google Sans',sans-serif; font-weight:700; font-size:13px; }
+ol.step-list > li b{ color:#fff; }
+ol.step-list pre.code{ margin:10px 0 2px; }
+.section p code, .term{ word-break:break-word; }
+@media (max-width:560px){
+  pre.code{ font-size:12px; padding:12px 12px; }
+  .copy-btn{ position:static; display:block; margin:0 0 8px auto; }
+  ol.step-list > li{ padding:12px 12px 12px 48px; }
+  ol.step-list > li::before{ left:12px; top:12px; width:26px; height:26px; }
+}
+
+</style>
+</head>
+<body>
+
+<div class="mobile-bar" id="mobileBar">
+  <span class="m-title">Lab 01 · Wazuh SIEM + Windows Detections</span>
+  <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="toc" aria-label="Open section menu">
+    <span></span>
+  </button>
+</div>
+<div class="toc-backdrop" id="tocBackdrop"></div>
+
+<div class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow">Lab 01 · SIEM &amp; Detection Engineering</span>
+    <h1>Wazuh SIEM + Windows Detections</h1>
+    <p class="lead">Hands-on lab guide: build a Wazuh SIEM in VirtualBox, enroll your Windows 11 victim VM, generate real security events, investigate them in the dashboard, and write your own detection rules mapped to MITRE ATT&amp;CK. Starts from a beginner Wazuh lab video, then goes further with custom rules, file integrity monitoring and a documented test plan. Tap "සිංහල" on any section for a Sinhala summary.</p>
+    <div class="hero-meta">
+      <span><span class="dot"></span> Time: about 3–4 hours</span>
+      <span><span class="dot"></span> VMs: Wazuh-Server (new, 4 GB) + Win-Victim (4 GB)</span>
+      <span><span class="dot"></span> Feeds portfolio project: SentinelOps</span>
+    </div>
+
+    <div class="hero-search-row">
+      <div class="site-search" id="siteSearch">
+        <span class="s-icon">🔍</span>
+        <input type="text" id="topicJump" placeholder="Search labs… e.g. Wazuh, pfSense, phishing, PCAP" autocomplete="off">
+        <button class="s-clear" id="jumpClear" aria-label="Clear search">✕</button>
+        <div class="s-dropdown" id="jumpDropdown"></div>
+      </div>
+
+      <div class="hero-find-col">
+        <div class="site-search find-page-search" id="heroFindWrap">
+          <span class="s-icon">🔎</span>
+          <input type="text" id="heroFindInput" placeholder="Find on this page…" autocomplete="off">
+          <button class="s-clear" id="heroFindClear" aria-label="Clear search">✕</button>
+        </div>
+        <div class="find-page-nav" id="heroFindNav">
+          <span id="heroSearchCount">0 / 0</span>
+          <div class="snav-btns">
+            <button id="heroSearchPrev" type="button" aria-label="Previous match" disabled>‹</button>
+            <button id="heroSearchNext" type="button" aria-label="Next match" disabled>›</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="path-nav">
+      <a class="path-btn prev" href="lab-00-environment-overview.html">
+        <span class="p-arrow">←</span>
+        <span class="p-text"><span class="p-kicker">Before you start · 00</span><span class="p-title">Lab Environment Overview</span></span>
+      </a>
+      <a class="path-btn index" href="labs-index.html">
+        <span class="p-text"><span class="p-kicker">All labs</span><span class="p-title">🏠 Labs Index</span></span>
+      </a>
+      <a class="path-btn next" href="lab-02-pfsense-suricata-log-forwarding.html">
+        <span class="p-text"><span class="p-kicker">Next · 02</span><span class="p-title">pfSense + Suricata + Log Forwarding</span></span>
+        <span class="p-arrow">→</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+  <nav class="toc" id="toc">
+    <div class="toc-head">On this page <button class="drawer-close" id="drawerClose" aria-label="Close menu">✕</button></div>
+
+    <div class="toc-search">
+      <div class="toc-search-box">
+        <span class="s-icon">🔍</span>
+        <input type="text" id="pageSearchInput" placeholder="Find on this page…" autocomplete="off">
+        <button class="s-clear" id="pageSearchClear" aria-label="Clear search">✕</button>
+      </div>
+      <div class="toc-search-nav" id="searchNav">
+        <span id="searchCount">0 / 0</span>
+        <div class="snav-btns">
+          <button id="searchPrev" aria-label="Previous match" disabled>‹</button>
+          <button id="searchNext" aria-label="Next match" disabled>›</button>
+        </div>
+      </div>
+    </div>
+
+    <a href="#overview">1. Overview &amp; goals</a>
+    <a href="#design">2. Lab design &amp; requirements</a>
+    <a href="#vm">3. Step 1 — Create the Wazuh-Server VM</a>
+    <a href="#ubuntu">4. Step 2 — Install Ubuntu &amp; set the network</a>
+    <a href="#wazuh">5. Step 3 — Install Wazuh all-in-one</a>
+    <a href="#agent">6. Step 4 — Enroll the Win-Victim agent</a>
+    <a href="#events">7. Step 5 — Generate events &amp; investigate</a>
+    <a href="#fim">8. Step 6 — File integrity monitoring</a>
+    <a href="#rules">9. Step 7 — Write custom detection rules</a>
+    <a href="#publish">10. Step 8 — Document &amp; publish</a>
+    <a href="#trouble">11. Troubleshooting</a>
+    <div class="toc-divider">Beyond the lab</div>
+    <a href="#exam">Interview &amp; Cert Takeaways</a>
+    <a href="#soc">SOC Analyst — Real-World Relevance</a>
+    <a href="#cloud">Cloud Security Engineer — Real-World Relevance</a>
+    <a href="#glossary">Glossary — Acronyms &amp; Meanings</a>
+    <a href="#comparison">Comparison Tables</a>
+    <a href="#sinhala-vocab">🇱🇰 Sinhala Vocabulary</a>
+  </nav>
+
+  <main>
+
+    <!-- ================= 1. OVERVIEW ================= -->
+    <section class="section" id="overview">
+      <div class="kicker">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--blue)">1</div><h2>Overview &amp; goals</h2></div>
+      </div>
+      <p class="lede">A SIEM (Security Information and Event Management) system collects logs from many machines in one place, runs detection rules over them, and raises alerts. <span class="term">Wazuh</span> is a free, open-source platform that does this and adds endpoint features such as file integrity monitoring. In this lab you build a working single-node Wazuh, connect a Windows 11 endpoint to it, and then do the part most tutorials skip: writing and testing your own rules.</p>
+
+      <div class="purpose-grid">
+        <div class="purpose-card p1"><div class="p-name">Build the SIEM</div><div class="p-focus">Wazuh manager + indexer + dashboard</div></div>
+        <div class="purpose-card p2"><div class="p-name">Collect telemetry</div><div class="p-focus">Windows agent + event logs + FIM</div></div>
+        <div class="purpose-card p3"><div class="p-name">Detect &amp; tune</div><div class="p-focus">Custom rules mapped to ATT&amp;CK</div></div>
+        <div class="purpose-card p4"><div class="p-name">Document</div><div class="p-focus">Write-up for your Labs section</div></div>
+      </div>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--blue)"></span>What you will have at the end</div>
+      <div class="slide accent-blue">
+        <div class="slide-title">Lab 01 deliverables</div>
+        <ul>
+          <li>A working Wazuh single-node server you can open from your Windows host browser.</li>
+          <li><span class="term">Win-Victim</span> enrolled as an active agent, sending Windows Security logs.</li>
+          <li>Four real attack-style events investigated in the dashboard (failed logons, new user, admin group change, log clearing).</li>
+          <li>File integrity monitoring on a test folder, with added / modified / deleted alerts.</li>
+          <li>Four custom rules in <span class="term">local_rules.xml</span>, each mapped to a MITRE ATT&amp;CK technique and the NIST CSF DETECT function.</li>
+          <li>A finished lab note: setup diagram, screenshots, detections, and what went wrong.</li>
+        </ul>
+      </div>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--green)"></span>Lab architecture</div>
+      <svg viewBox="0 0 760 272" role="img" aria-label="Lab 01 architecture diagram" style="width:100%;height:auto;display:block;background:#1a1b1e;border:1px solid #3c4043;border-radius:12px;font-family:'Roboto',Arial,sans-serif">
+        <defs><marker id="ah" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8ab4f8"/></marker></defs>
+        <rect x="470" y="14" width="260" height="50" rx="10" fill="#22344d" stroke="#8ab4f8"/>
+        <text x="600" y="36" text-anchor="middle" fill="#a8c7fa" font-size="14" font-weight="700">Windows host · your browser</text>
+        <text x="600" y="54" text-anchor="middle" fill="#9aa0a6" font-size="11.5">https://127.0.0.1:8443</text>
+        <line x1="600" y1="64" x2="600" y2="116" stroke="#8ab4f8" stroke-width="2" marker-end="url(#ah)"/>
+        <text x="612" y="95" fill="#9aa0a6" font-size="11">NAT port-forward 8443 → 443</text>
+
+        <rect x="30" y="118" width="260" height="92" rx="12" fill="#2b2510" stroke="#fdd663"/>
+        <text x="160" y="146" text-anchor="middle" fill="#fdd663" font-size="15" font-weight="700">Win-Victim</text>
+        <text x="160" y="166" text-anchor="middle" fill="#c7cbd1" font-size="12">Windows 11 · Wazuh agent</text>
+        <text x="160" y="186" text-anchor="middle" fill="#9aa0a6" font-size="12">192.168.1.30</text>
+
+        <rect x="470" y="118" width="260" height="92" rx="12" fill="#1c2b22" stroke="#81c995"/>
+        <text x="600" y="146" text-anchor="middle" fill="#81c995" font-size="15" font-weight="700">Wazuh-Server</text>
+        <text x="600" y="166" text-anchor="middle" fill="#c7cbd1" font-size="12">Ubuntu 24.04 · manager + indexer + dashboard</text>
+        <text x="600" y="186" text-anchor="middle" fill="#9aa0a6" font-size="12">192.168.1.20</text>
+
+        <line x1="290" y1="164" x2="468" y2="164" stroke="#8ab4f8" stroke-width="2" marker-end="url(#ah)"/>
+        <text x="380" y="150" text-anchor="middle" fill="#a8c7fa" font-size="11.5">SOC-Lab-Net (internal)</text>
+        <text x="380" y="184" text-anchor="middle" fill="#9aa0a6" font-size="11">TCP 1514 events · 1515 enroll</text>
+
+        <line x1="160" y1="210" x2="160" y2="236" stroke="#5f6368" stroke-dasharray="4 4"/>
+        <line x1="600" y1="210" x2="600" y2="236" stroke="#5f6368" stroke-dasharray="4 4"/>
+        <rect x="30" y="236" width="700" height="28" rx="8" fill="#232427" stroke="#3c4043"/>
+        <text x="380" y="255" text-anchor="middle" fill="#9aa0a6" font-size="12">Internet through VirtualBox NAT — installers and updates only</text>
+      </svg>
+      <div class="callout">Every VM sits on the isolated <b>SOC-Lab-Net</b> internal network, so the attack-style activity in this lab never touches your home network. NAT is used only to download installers and updates.</div>
+
+      <div class="si-divider"><button class="si-toggle" data-target="si-overview" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-overview">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        <p class="si">මෙම පරීක්ෂණාගාර (Lab) පාඩමෙන් ඔබ VirtualBox තුළ Wazuh SIEM පද්ධතියක් ගොඩනඟා, Windows 11 victim VM එකක් එයට සම්බන්ධ කර, සැබෑ ආරක්ෂක සිදුවීම් (security events) ජනනය කර, ඒවා විමර්ශනය කර, MITRE ATT&amp;CK සමග ගැලපෙන ඔබේම හඳුනාගැනීමේ රීති (detection rules) ලියනු ඇත.</p>
+        <p class="si"><b>අවසානයේ ලැබෙන දේ:</b> වැඩ කරන SIEM එකක්, ලියූ රීති හතරක්, සහ ඔබේ වෙබ් අඩවියට දැමිය හැකි පරීක්ෂණ සටහනක්.</p>
+      </div>
+    </section>
+
+    <!-- ================= 2. DESIGN ================= -->
+    <section class="section" id="design">
+      <div class="kicker">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--green)">2</div><h2>Lab design &amp; requirements</h2></div>
+      </div>
+      <p class="lede">Only two VMs run in this lab. Everything else (pfSense, Kali, the older Ubuntu server, the LinuxPlus VMs) stays powered off to save RAM.</p>
+
+      <div class="callout warn"><b>Change from the original plan:</b> your existing <span class="term">Ubuntu-Server-Lab</span> runs Ubuntu 25.04. That release reached end of life in January 2026, so its package repositories are no longer maintained, and Wazuh's installer officially supports Ubuntu only up to 24.04. This lab therefore uses a <b>new VM on Ubuntu Server 24.04 LTS</b>. Keep Ubuntu-Server-Lab as is — you can still use it later as a monitored Linux endpoint.</div>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--green)"></span>VMs used in this lab</div>
+      <div class="table-wrap">
+        <table class="ctable">
+          <thead><tr><th>VM</th><th>Role</th><th>RAM</th><th>Disk</th><th>Network adapters</th><th>Lab IP</th></tr></thead>
+          <tbody>
+            <tr><td class="row-head">Wazuh-Server <i>(new)</i></td><td>Wazuh manager + indexer + dashboard</td><td>4096 MB</td><td>30 GB dynamic (about 12–15 GB used)</td><td>1: NAT (with port forwards) · 2: Internal <span class="term">SOC-Lab-Net</span></td><td>192.168.1.20 (static)</td></tr>
+            <tr><td class="row-head">Win-Victim</td><td>Windows 11 endpoint + Wazuh agent</td><td>4096 MB</td><td>60 GB max (17.8 GB used)</td><td>1: Internal <span class="term">SOC-Lab-Net</span> · 2: NAT</td><td>192.168.1.30 (static)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--yellow)"></span>Resource check before you start</div>
+      <ul class="exam-list">
+        <li><span class="chk"></span><span><b>RAM:</b> two VMs use 8 GB. Windows and your browser need about 4–5 GB, so close heavy apps. Your laptop has 15.7 GB usable.</span></li>
+        <li><span class="chk"></span><span><b>Disk:</b> keep at least <b>10 GB free on D:</b> after creating the Wazuh-Server VM. VirtualBox slows down badly on a nearly full drive.</span></li>
+        <li><span class="chk"></span><span><b>Downloads:</b> Ubuntu Server 24.04 LTS ISO (about 3 GB). Check ubuntu.com for the current 24.04.x point release.</span></li>
+        <li><span class="chk"></span><span><b>Snapshots:</b> you will take one before each major step. Rolling back is faster than debugging a broken install.</span></li>
+        <li><span class="chk"></span><span><b>Time:</b> allow 3–4 hours, or split it across two sessions (stop after Step 3).</span></li>
+      </ul>
+
+      <div class="callout">pfSense is <b>not needed</b> in Lab 01. Both VMs use static addresses on SOC-Lab-Net, so nothing depends on pfSense's DHCP. It joins in Lab 02.</div>
+    </section>
+
+    <!-- ================= 3. VM ================= -->
+    <section class="section" id="vm">
+      <div class="kicker">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--blue)">3</div><h2>Step 1 — Create the Wazuh-Server VM</h2></div>
+      </div>
+      <p class="lede">Create a fresh VM in VirtualBox. Doing this by hand (instead of unattended install) keeps the disk layout and user account under your control.</p>
+
+      <ol class="step-list">
+        <li><b>Download the ISO</b> — Ubuntu Server 24.04 LTS (live server, amd64). Save it next to your other ISOs.</li>
+        <li><b>New VM</b> — Name <span class="term">Wazuh-Server</span>. Folder: <span class="term">D:\04_Personal_and_System\16_Virtual_Machines\SOC_Lab\Wazuh\Wazuh-Server</span>. Type Linux, version Ubuntu (64-bit). Tick <b>Skip Unattended Installation</b>.</li>
+        <li><b>Hardware</b> — Base memory <b>4096 MB</b>, <b>2 CPUs</b>, new virtual disk <b>30 GB</b>, VDI, dynamically allocated (do not tick "Pre-allocate").</li>
+        <li><b>Network → Adapter 1</b> — NAT, adapter type Intel PRO/1000 MT Desktop. Open <b>Port Forwarding</b> and add two rules (Host IP <span class="term">127.0.0.1</span>, leave Guest IP empty):
+          <div class="table-wrap" style="margin-top:10px"><table class="ctable"><thead><tr><th>Name</th><th>Protocol</th><th>Host port</th><th>Guest port</th></tr></thead><tbody>
+            <tr><td class="row-head">ssh</td><td>TCP</td><td>2222</td><td>22</td></tr>
+            <tr><td class="row-head">dashboard</td><td>TCP</td><td>8443</td><td>443</td></tr>
+          </tbody></table></div>
+        </li>
+        <li><b>Network → Adapter 2</b> — Enable, attached to <b>Internal Network</b>, name exactly <span class="term">SOC-Lab-Net</span>, adapter type Intel PRO/1000 MT Desktop (same as your other lab VMs).</li>
+        <li><b>Storage</b> — attach the Ubuntu Server ISO to the optical drive, then start the VM.</li>
+      </ol>
+
+      <div class="shot"><b>📸 Screenshot to add:</b> Wazuh-Server → Settings → Network (both adapters) and the Port Forwarding table.<br><span style="font-size:12px">Replace this box with a &lt;figure class="figure"&gt; block when you have the image.</span></div>
+
+      <div class="callout warn">The internal network name is case-sensitive. <span class="term">SOC-Lab-Net</span> must match your other VMs exactly, otherwise the VMs cannot see each other.</div>
+
+      <div class="si-divider"><button class="si-toggle" data-target="si-vm" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-vm">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        <p class="si">Wazuh සඳහා නව Ubuntu Server 24.04 LTS VM එකක් (Wazuh-Server) සාදන්න: RAM 4 GB, CPU 2ක්, තැටිය 30 GB. Adapter 1 NAT ලෙසත් (අන්තර්ජාලය සඳහා), Adapter 2 SOC-Lab-Net ලෙසත් (ලැබ් ජාලය සඳහා) සකසන්න. NAT හි Port Forwarding රීති දෙකක් එක් කරන්න — 2222 → 22 සහ 8443 → 443.</p>
+      </div>
+    </section>
+
+    <!-- ================= 4. UBUNTU ================= -->
+    <section class="section" id="ubuntu">
+      <div class="kicker">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--green)">4</div><h2>Step 2 — Install Ubuntu &amp; set the network</h2></div>
+      </div>
+      <p class="lede">Install the OS, give the VM a fixed lab address, and confirm it can reach the internet through NAT.</p>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--blue)"></span>Installer choices that matter</div>
+      <ol class="step-list">
+        <li><b>Base:</b> Ubuntu Server (not the minimized option). Leave both network adapters on DHCP for now.</li>
+        <li><b>Storage — important:</b> choose "Use an entire disk" and <b>untick "Set up this disk as an LVM group"</b>. The default LVM layout can leave the root volume at roughly half of a small disk, and Wazuh needs the space.</li>
+        <li><b>Profile:</b> server name <span class="term">wazuh-server</span>, your own username, and a strong password.</li>
+        <li><b>SSH:</b> tick <b>Install OpenSSH server</b>. Do not pick any featured snaps.</li>
+        <li>When it finishes, choose Reboot, then remove the ISO if VirtualBox asks.</li>
+      </ol>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--green)"></span>Set the static lab IP</div>
+      <p>Log in at the VM console and find the interface names (expect <span class="term">enp0s3</span> = NAT and <span class="term">enp0s8</span> = internal):</p>
+      <pre class="code"><code>ip -br a</code></pre>
+      <p>Disable cloud-init's network rewriting, then edit the netplan file so only the internal adapter gets a fixed address. Leaving the gateway off <span class="term">enp0s8</span> keeps NAT as the default route to the internet.</p>
+      <pre class="code"><code>ls /etc/netplan     # use the file name you see here
+echo 'network: {config: disabled}' | sudo tee /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
+sudo nano /etc/netplan/50-cloud-init.yaml</code></pre>
+      <pre class="code"><code>network:
+  version: 2
+  ethernets:
+    enp0s3:            # NAT adapter - internet access
+      dhcp4: true
+    enp0s8:            # SOC-Lab-Net adapter - fixed lab address, no gateway
+      dhcp4: false
+      addresses:
+        - 192.168.1.20/24</code></pre>
+      <p>Apply and verify:</p>
+      <pre class="code"><code>sudo chmod 600 /etc/netplan/50-cloud-init.yaml
+sudo netplan apply
+ip -br a
+ip route
+ping -c 3 ubuntu.com</code></pre>
+      <p>Expected: <span class="term">enp0s3</span> has an address like 10.0.2.15, <span class="term">enp0s8</span> has 192.168.1.20, the default route goes via 10.0.2.2, and the ping to ubuntu.com succeeds.</p>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--yellow)"></span>Update, check the clock, connect over SSH</div>
+      <pre class="code"><code>sudo apt update &amp;&amp; sudo apt -y full-upgrade
+sudo reboot
+
+# after the reboot:
+timedatectl        # look for: System clock synchronized: yes
+hostnamectl</code></pre>
+      <p>From now on use PowerShell on your Windows host to connect, which lets you copy and paste commands:</p>
+      <pre class="code"><code>ssh -p 2222 YOUR_USERNAME@127.0.0.1</code></pre>
+      <div class="callout">Take snapshot <b>01-Ubuntu-Base</b> now (VM Machine → Take Snapshot). If anything goes wrong in Step 3 you can return here in seconds.</div>
+
+      <div class="si-divider"><button class="si-toggle" data-target="si-ubuntu" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-ubuntu">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        <p class="si">Ubuntu ස්ථාපනය කිරීමේදී LVM අක්‍රිය කර සම්පූර්ණ තැටිය භාවිත කරන්න. ඉන්පසු netplan හරහා Wazuh-Server හි ලැබ් IP ලිපිනය 192.168.1.20 ලෙස ස්ථිරව (static) සකසන්න. NAT ඇඩැප්ටරය අන්තර්ජාලය සඳහා පමණක් භාවිත වේ. අවසානයේ 01-Ubuntu-Base snapshot එකක් ගන්න.</p>
+      </div>
+    </section>
+    <!-- ================= 5. WAZUH ================= -->
+    <section class="section" id="wazuh">
+      <div class="kicker">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--red)">5</div><h2>Step 3 — Install Wazuh all-in-one</h2></div>
+      </div>
+      <p class="lede">The Wazuh installation assistant installs the manager, indexer, dashboard and Filebeat on one machine. This lab uses the 4.14 stable line.</p>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--yellow)"></span>Pre-checks</div>
+      <pre class="code"><code>free -h
+df -h /
+nproc</code></pre>
+      <p>You want about 4 GB of total memory and at least 15 GB free on <span class="term">/</span>. If the root filesystem is only about 15 GB on your 30 GB disk, the LVM layout was used — see the Troubleshooting section for the one-line fix.</p>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--red)"></span>Run the installer</div>
+      <pre class="code"><code>curl -sO https://packages.wazuh.com/4.14/wazuh-install.sh
+sudo bash ./wazuh-install.sh -a</code></pre>
+      <p>It takes roughly 10–20 minutes. When it finishes, the summary prints the dashboard address and the <b>admin</b> password. Copy the password into a password manager right away. To print all generated passwords later:</p>
+      <pre class="code"><code># run from the folder where you ran the installer
+sudo tar -O -xvf wazuh-install-files.tar wazuh-install-files/wazuh-passwords.txt</code></pre>
+      <div class="callout warn">The installer checks hardware. If it stops with a memory or CPU warning on your 4 GB VM, you can re-run it with <span class="term">-i</span> to ignore the check. Expect slower performance and keep other VMs off.</div>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--green)"></span>Verify and open the dashboard</div>
+      <pre class="code"><code>sudo systemctl is-active wazuh-manager wazuh-indexer wazuh-dashboard filebeat</code></pre>
+      <p>All four should print <span class="term">active</span>. Then open <span class="term">https://127.0.0.1:8443</span> in your Windows browser. The certificate is self-signed, so accept the warning, and log in as <b>admin</b>.</p>
+
+      <div class="shot"><b>📸 Screenshot to add:</b> the Wazuh dashboard home page after login (hide anything personal).</div>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--blue)"></span>Optional: lighten the load and prevent surprise upgrades</div>
+      <pre class="code"><code># stop accidental upgrades of Wazuh packages
+sudo sed -i 's/^deb/#deb/' /etc/apt/sources.list.d/wazuh.list
+
+# optional: cap indexer memory (set -Xms1g and -Xmx1g), then restart it
+sudo nano /etc/wazuh-indexer/jvm.options
+sudo systemctl restart wazuh-indexer</code></pre>
+      <p>The first command stops accidental package upgrades of Wazuh components (the manager, indexer and dashboard must stay on matching versions). The heap edit is only needed if the VM feels slow: set both <span class="term">-Xms</span> and <span class="term">-Xmx</span> to <span class="term">1g</span>, then restart the indexer.</p>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--purple)"></span>Ports to remember</div>
+      <div class="table-wrap"><table class="ctable"><thead><tr><th>Port</th><th>Used for</th></tr></thead><tbody>
+        <tr><td class="row-head">443/TCP</td><td>Wazuh dashboard (web UI)</td></tr>
+        <tr><td class="row-head">1514</td><td>Agent-to-manager event traffic</td></tr>
+        <tr><td class="row-head">1515/TCP</td><td>Agent enrollment</td></tr>
+        <tr><td class="row-head">55000/TCP</td><td>Wazuh server API</td></tr>
+        <tr><td class="row-head">9200/TCP</td><td>Wazuh indexer</td></tr>
+      </tbody></table></div>
+      <div class="callout">Take snapshot <b>02-Wazuh-Installed</b>. This is your known-good SIEM baseline for every later lab.</div>
+
+      <div class="si-divider"><button class="si-toggle" data-target="si-wazuh" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-wazuh">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        <p class="si">Wazuh ස්ථාපන සහායකය (installation assistant) ධාවනය කළ විට Wazuh manager, indexer සහ dashboard යන සියල්ල එකම VM එකේ ස්ථාපනය වේ. අවසානයේ පෙන්වන admin මුරපදය ආරක්ෂිතව සටහන් කරගන්න. ඉන්පසු ඔබේ Windows පරිගණකයේ බ්‍රවුසරයෙන් https://127.0.0.1:8443 වෙත පිවිසෙන්න. 02-Wazuh-Installed snapshot එකක් ගන්න.</p>
+      </div>
+    </section>
+
+    <!-- ================= 6. AGENT ================= -->
+    <section class="section" id="agent">
+      <div class="kicker">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--yellow)">6</div><h2>Step 4 — Enroll the Win-Victim agent</h2></div>
+      </div>
+      <p class="lede">The Wazuh agent runs on the Windows machine, reads its event logs and file changes, and ships them to the manager. Keep both VMs powered on for this step.</p>
+
+      <ol class="step-list">
+        <li><b>Snapshot first.</b> Power on Win-Victim, sign in, then take snapshot <span class="term">02-Pre-Wazuh</span> (your existing 01-Clean-Base stays untouched).</li>
+        <li><b>Set a static IP</b> on the adapter attached to SOC-Lab-Net (the first adapter, MAC ending 2863): Settings → Network &amp; internet → Ethernet → IP assignment → Edit → Manual → IPv4. IP <span class="term">192.168.1.30</span>, subnet mask <span class="term">255.255.255.0</span>, leave gateway and DNS empty. The NAT adapter keeps providing internet.</li>
+        <li><b>Test connectivity</b> from an elevated PowerShell on Win-Victim. Both ports must report <span class="term">TcpTestSucceeded : True</span>:
+          <pre class="code"><code>Test-NetConnection 192.168.1.20 -Port 1515
+Test-NetConnection 192.168.1.20 -Port 1514</code></pre>
+        </li>
+        <li><b>Generate the install command.</b> In the Wazuh dashboard open <b>Agents → Deploy new agent</b>. Pick Windows / MSI, server address <span class="term">192.168.1.20</span>, agent name <span class="term">Win-Victim</span>. Copy the PowerShell commands it produces — they contain the correct current version.</li>
+        <li><b>Run them</b> in elevated PowerShell on Win-Victim. The generated commands look like this (the version number is filled in by the wizard):
+          <pre class="code"><code># the dashboard wizard fills in the real version for &lt;VERSION&gt;
+Invoke-WebRequest -Uri https://packages.wazuh.com/4.x/windows/wazuh-agent-&lt;VERSION&gt;-1.msi -OutFile $env:tmp\wazuh-agent.msi
+msiexec.exe /i $env:tmp\wazuh-agent.msi /q WAZUH_MANAGER='192.168.1.20' WAZUH_AGENT_NAME='Win-Victim'
+NET START WazuhSvc</code></pre>
+        </li>
+        <li><b>Confirm.</b> In the dashboard, Agents should list <b>Win-Victim</b> as <b>Active</b> within a minute.</li>
+      </ol>
+
+      <div class="shot"><b>📸 Screenshot to add:</b> the Agents page showing Win-Victim Active, with its IP and OS.</div>
+      <div class="callout warn">The agent version must not be newer than the manager. Always use the install command from the dashboard wizard instead of an older command from a video or blog.</div>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--blue)"></span>If the agent does not connect</div>
+      <pre class="code"><code>Get-Service WazuhSvc
+Get-Content "C:\Program Files (x86)\ossec-agent\ossec.log" -Tail 20</code></pre>
+      <p>The log should show a successful connection to <span class="term">192.168.1.20</span>. Details of common causes are in the Troubleshooting section.</p>
+
+      <div class="si-divider"><button class="si-toggle" data-target="si-agent" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-agent">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        <p class="si">Win-Victim හි static IP 192.168.1.30 ලබා දී, Wazuh dashboard හි "Deploy new agent" මඟපෙන්වීම භාවිතයෙන් agent එක ස්ථාපනය කරන්න. Agents ලැයිස්තුවේ Win-Victim "Active" ලෙස පෙනෙන්නේ නම් සම්බන්ධතාවය සාර්ථකය.</p>
+      </div>
+    </section>
+
+    <!-- ================= 7. EVENTS ================= -->
+    <section class="section" id="events">
+      <div class="kicker">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--green)">7</div><h2>Step 5 — Generate events &amp; investigate</h2></div>
+      </div>
+      <p class="lede">Windows already logs the events below by default, and the Wazuh agent already collects the Security log. You only need to cause the activity. Run these in an <b>elevated PowerShell on Win-Victim</b>. They are harmless in this isolated lab VM.</p>
+
+      <pre class="code"><code># 1) Six failed logons for a user that does not exist (event 4625)
+1..6 | ForEach-Object { net use \\localhost\IPC$ /user:labfake "BadPass$_" 2&gt;$null }
+
+# 2) Create a local user (4720) and add it to Administrators (4732)
+net user labuser "Lab-Pass-2026!x" /add
+net localgroup Administrators labuser /add
+
+# 3) Remove the test user again
+net localgroup Administrators labuser /delete
+net user labuser /delete
+
+# 4) Clear the Security log (1102) - lab VM only, this erases its local audit history
+wevtutil cl Security</code></pre>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--yellow)"></span>What each action should produce</div>
+      <div class="table-wrap"><table class="ctable">
+        <thead><tr><th>Action</th><th>Windows event ID</th><th>ATT&amp;CK idea</th><th>What to look for in Wazuh</th></tr></thead>
+        <tbody>
+          <tr><td class="row-head">Bad logons</td><td>4625</td><td>T1110 Brute Force</td><td>Several "logon failure" alerts; repeated failures may raise a higher-level alert</td></tr>
+          <tr><td class="row-head">New local user</td><td>4720</td><td>T1136.001 Create Account</td><td>"User account created" style alert</td></tr>
+          <tr><td class="row-head">Added to Administrators</td><td>4732</td><td>T1098 Account Manipulation</td><td>Group-membership change alert</td></tr>
+          <tr><td class="row-head">Security log cleared</td><td>1102</td><td>T1070.001 Clear Windows Event Logs</td><td>"Audit log cleared" alert</td></tr>
+        </tbody>
+      </table></div>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--blue)"></span>Investigate in the dashboard</div>
+      <ol class="step-list">
+        <li>Open the <b>Threat Hunting</b> (or Discover) view, set the time range to the last 15 minutes, and search:
+          <pre class="code"><code>agent.name:Win-Victim AND data.win.system.eventID:(4625 OR 4720 OR 4732 OR 1102)</code></pre>
+        </li>
+        <li>Add these columns: <span class="term">rule.id</span>, <span class="term">rule.level</span>, <span class="term">rule.description</span>, <span class="term">rule.mitre.id</span>, <span class="term">data.win.system.eventID</span>.</li>
+        <li>For the failed logons, open one event and read <span class="term">data.win.eventdata.subStatus</span>. <span class="term">0xC0000064</span> means the user name does not exist; <span class="term">0xC000006A</span> means the user exists but the password was wrong.</li>
+        <li><b>Write down the actual <span class="term">rule.id</span> and level Wazuh gave each event.</b> You need these IDs in Step 7.</li>
+      </ol>
+
+      <div class="shot"><b>📸 Screenshot to add:</b> the events table showing the four event types with rule.id, level and MITRE columns.</div>
+
+      <div class="si-divider"><button class="si-toggle" data-target="si-events" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-events">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        <p class="si">PowerShell හරහා අසාර්ථක පිවිසුම් (event 4625), නව පරිශීලක නිර්මාණය (4720), Administrators කණ්ඩායමට එක් කිරීම (4732) සහ Security ලොගය මකා දැමීම (1102) ජනනය කරන්න. ඉන්පසු dashboard හි ඒවායේ rule.id සහ level සටහන් කරගන්න — ඊළඟ පියවරට ඒවා අවශ්‍ය වේ.</p>
+      </div>
+    </section>
+
+    <!-- ================= 8. FIM ================= -->
+    <section class="section" id="fim">
+      <div class="kicker">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--purple)">8</div><h2>Step 6 — File integrity monitoring</h2></div>
+      </div>
+      <p class="lede">File integrity monitoring (FIM) tells you when files in a watched location are added, changed or deleted. In Wazuh it is called <span class="term">syscheck</span>. This is the feature the beginner video demonstrates — here you will add your own folder.</p>
+
+      <ol class="step-list">
+        <li>On Win-Victim create the folder to watch (elevated PowerShell): <pre class="code"><code>mkdir C:\LabWatch</code></pre></li>
+        <li>Open the agent config as Administrator (for example, right-click Notepad → Run as administrator → open the file below). Make a copy first.
+          <pre class="code"><code>Copy-Item "C:\Program Files (x86)\ossec-agent\ossec.conf" "C:\Program Files (x86)\ossec-agent\ossec.conf.bak"
+notepad "C:\Program Files (x86)\ossec-agent\ossec.conf"</code></pre>
+        </li>
+        <li>Find the existing <span class="term">&lt;syscheck&gt;</span> block and add this line inside it:
+          <pre class="code"><code>&lt;directories realtime="yes" check_all="yes" report_changes="yes"&gt;C:\LabWatch&lt;/directories&gt;</code></pre>
+        </li>
+        <li>Restart the agent so it picks up the new folder (it must exist before the agent starts):
+          <pre class="code"><code>Restart-Service -Name WazuhSvc</code></pre>
+        </li>
+        <li>Trigger the three change types:
+          <pre class="code"><code>"hello" | Out-File C:\LabWatch\notes.txt          # added
+Start-Sleep 5
+Add-Content C:\LabWatch\notes.txt "changed"         # modified
+Start-Sleep 5
+Remove-Item C:\LabWatch\notes.txt                    # deleted</code></pre>
+        </li>
+        <li>In the dashboard, open the <b>File Integrity Monitoring</b> view for Win-Victim, or search <span class="term">agent.name:Win-Victim AND syscheck.path:*labwatch*</span>.</li>
+      </ol>
+
+      <div class="callout">Expect three alerts: file added, modified and deleted. Windows stores the path in lower case, so search with lower-case text. Realtime mode shows that something changed; it does not show <i>who</i> changed it. A stronger mode (<span class="term">whodata</span>) adds that and is a good follow-up experiment.</div>
+
+      <div class="shot"><b>📸 Screenshot to add:</b> the FIM alerts for notes.txt (added, modified, deleted) including the diff if shown.</div>
+
+      <div class="si-divider"><button class="si-toggle" data-target="si-fim" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-fim">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        <p class="si">File Integrity Monitoring මගින් C:\LabWatch ෆෝල්ඩරයේ ගොනු එකතු වීම, වෙනස් වීම සහ මකා දැමීම ගැන Wazuh අනතුරු ඇඟවීම් ලබා දෙයි. agent හි ossec.conf ගොනුවේ &lt;syscheck&gt; කොටසට ෆෝල්ඩරය එක් කර, service එක නැවත ආරම්භ කළ යුතුය.</p>
+      </div>
+    </section>
+    <!-- ================= 9. RULES ================= -->
+    <section class="section" id="rules">
+      <div class="kicker">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--red)">9</div><h2>Step 7 — Write custom detection rules</h2></div>
+      </div>
+      <p class="lede">This is the part that turns a tutorial into portfolio work. Wazuh ships thousands of default rules; detection engineering is deciding which behaviours matter to <i>you</i>, raising their severity, tagging them with ATT&amp;CK, and testing that they fire.</p>
+
+      <div class="callout warn">Never edit Wazuh's default ruleset — upgrades overwrite it. Put your own rules in <span class="term">/var/ossec/etc/rules/local_rules.xml</span> and use IDs from <b>100000</b> upward.</div>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--blue)"></span>Workflow</div>
+      <ol class="step-list">
+        <li><b>Confirm the parent rule IDs</b> from your own alerts in Step 5. The rules below assume 60122 (logon failure), 60154 (Administrators group changed) and 63104 (audit log cleared). <b>If your dashboard shows different IDs, use yours.</b></li>
+        <li><b>Edit the rules file</b> on Wazuh-Server: <pre class="code"><code>sudo nano /var/ossec/etc/rules/local_rules.xml</code></pre></li>
+        <li><b>Add your rules</b> inside the file (below the existing content):
+          <pre class="code"><code>&lt;group name="local,lab01,windows,"&gt;
+
+  &lt;!-- 1. Tuned brute force: 5 failed logons in 2 minutes (T1110) --&gt;
+  &lt;rule id="100101" level="10" frequency="5" timeframe="120"&gt;
+    &lt;if_matched_sid&gt;60122&lt;/if_matched_sid&gt;
+    &lt;description&gt;Lab01: 5+ Windows logon failures within 2 minutes&lt;/description&gt;
+    &lt;mitre&gt;&lt;id&gt;T1110&lt;/id&gt;&lt;/mitre&gt;
+    &lt;group&gt;authentication_failures,&lt;/group&gt;
+  &lt;/rule&gt;
+
+  &lt;!-- 2. Member added to the local Administrators group (T1098) --&gt;
+  &lt;rule id="100102" level="12"&gt;
+    &lt;if_sid&gt;60154&lt;/if_sid&gt;
+    &lt;description&gt;Lab01: Member added to local Administrators group&lt;/description&gt;
+    &lt;mitre&gt;&lt;id&gt;T1098&lt;/id&gt;&lt;/mitre&gt;
+  &lt;/rule&gt;
+
+  &lt;!-- 3. Windows Security audit log cleared (T1070.001) --&gt;
+  &lt;rule id="100103" level="14"&gt;
+    &lt;if_sid&gt;63104&lt;/if_sid&gt;
+    &lt;description&gt;Lab01: Windows Security audit log was cleared&lt;/description&gt;
+    &lt;mitre&gt;&lt;id&gt;T1070.001&lt;/id&gt;&lt;/mitre&gt;
+  &lt;/rule&gt;
+
+  &lt;!-- 4. Any file change in the watched lab folder (T1565.001) --&gt;
+  &lt;rule id="100104" level="10"&gt;
+    &lt;if_sid&gt;550,553,554&lt;/if_sid&gt;
+    &lt;field name="file" type="pcre2"&gt;(?i)labwatch&lt;/field&gt;
+    &lt;description&gt;Lab01: File change inside C:\LabWatch&lt;/description&gt;
+    &lt;mitre&gt;&lt;id&gt;T1565.001&lt;/id&gt;&lt;/mitre&gt;
+  &lt;/rule&gt;
+
+&lt;/group&gt;</code></pre>
+        </li>
+        <li><b>Check the syntax before restarting.</b> A wrong parent ID shows up here instead of breaking the manager: <pre class="code"><code>sudo /var/ossec/bin/wazuh-analysisd -t</code></pre></li>
+        <li><b>Restart and re-trigger</b> the activity from Steps 5 and 6: <pre class="code"><code>sudo systemctl restart wazuh-manager</code></pre></li>
+        <li><b>Confirm</b> the new alerts appear with <span class="term">rule.id</span> 100101–100104, the right level, and the ATT&amp;CK tag.</li>
+      </ol>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--green)"></span>Rule map</div>
+      <div class="table-wrap"><table class="ctable">
+        <thead><tr><th>Rule ID</th><th>Detects</th><th>Level</th><th>MITRE ATT&amp;CK</th><th>NIST CSF</th></tr></thead>
+        <tbody>
+          <tr><td class="row-head">100101</td><td>5+ logon failures in 2 minutes</td><td>10</td><td>T1110 Brute Force</td><td>DETECT (DE.AE)</td></tr>
+          <tr><td class="row-head">100102</td><td>Member added to local Administrators</td><td>12</td><td>T1098 Account Manipulation</td><td>DETECT (DE.CM)</td></tr>
+          <tr><td class="row-head">100103</td><td>Security audit log cleared</td><td>14</td><td>T1070.001 Clear Windows Event Logs</td><td>DETECT (DE.AE)</td></tr>
+          <tr><td class="row-head">100104</td><td>Any file change in C:\LabWatch</td><td>10</td><td>T1565.001 Stored Data Manipulation</td><td>DETECT (DE.CM)</td></tr>
+        </tbody>
+      </table></div>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--yellow)"></span>Think like a detection engineer</div>
+      <ul class="exam-list">
+        <li><span class="chk"></span><span><b>False positives:</b> a real administrator adds users to the Administrators group too. In a real SOC you would allow-list known admin accounts or maintenance windows. Write down how you would tune rule 100102.</span></li>
+        <li><span class="chk"></span><span><b>Thresholds:</b> why 5 failures in 120 seconds? Try 3 and 10 and note the noise level.</span></li>
+        <li><span class="chk"></span><span><b>Severity:</b> clearing the Security log is rarely legitimate, which is why it gets the highest level here.</span></li>
+        <li><span class="chk"></span><span><b>Evasion:</b> an attacker with admin rights could stop the agent. Note what other signal you would watch for.</span></li>
+      </ul>
+
+      <div class="si-divider"><button class="si-toggle" data-target="si-rules" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-rules">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        <p class="si">/var/ossec/etc/rules/local_rules.xml ගොනුවේ ඔබේම රීති ලියන්න (ID 100000 සිට ඉහළට). රීති සුරැකීමට පෙර wazuh-analysisd -t මගින් පරීක්ෂා කර, manager එක නැවත ආරම්භ කර, නැවත සිදුවීම් ජනනය කර alert පෙනෙනවාදැයි බලන්න. පෙරනිමි (default) රීති කිසිවිටෙක වෙනස් නොකරන්න.</p>
+      </div>
+    </section>
+
+    <!-- ================= 10. PUBLISH ================= -->
+    <section class="section" id="publish">
+      <div class="kicker">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--blue)">10</div><h2>Step 8 — Document &amp; publish</h2></div>
+      </div>
+      <p class="lede">Turn the finished lab into one page for the Labs section of your website, and into code for the SentinelOps repository.</p>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--green)"></span>Screenshots to capture (8)</div>
+      <ul class="exam-list">
+        <li><span class="chk"></span><span>Wazuh-Server network settings and port-forward table</span></li>
+        <li><span class="chk"></span><span><span class="term">ip -br a</span> output showing both adapters</span></li>
+        <li><span class="chk"></span><span>Wazuh dashboard home</span></li>
+        <li><span class="chk"></span><span>Agents page with Win-Victim Active</span></li>
+        <li><span class="chk"></span><span>Events table with rule.id, level and MITRE columns</span></li>
+        <li><span class="chk"></span><span>FIM added / modified / deleted alerts</span></li>
+        <li><span class="chk"></span><span>Your custom rules firing (rule.id 1001xx)</span></li>
+        <li><span class="chk"></span><span><span class="term">wazuh-analysisd -t</span> passing</span></li>
+      </ul>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--blue)"></span>Lab note template (400–700 words)</div>
+      <div class="slide def"><p><b>1 Goal</b> — what you wanted to learn. <b>2 Setup</b> — diagram and VMs. <b>3 What I did</b> — key steps, 3–5 screenshots. <b>4 Detections</b> — rules, alerts, ATT&amp;CK mapping. <b>5 What went wrong</b> — one real problem and the fix (for example, the Ubuntu 25.04 end-of-life or the LVM disk size). <b>6 Next</b> — what you would do next, such as Lab 02.</p></div>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--red)"></span>Publish vs keep private</div>
+      <div class="slide-row cols-2">
+        <div class="slide accent-green"><div class="slide-title">Publish</div><ul>
+          <li>Your <span class="term">local_rules.xml</span> rules and ATT&amp;CK mapping (add to the SentinelOps repo)</li>
+          <li>Architecture diagram and screenshots</li>
+          <li>The lab note and your tuning thoughts</li>
+        </ul></div>
+        <div class="slide accent-red"><div class="slide-title">Never publish</div><ul>
+          <li>The admin password or <span class="term">wazuh-passwords.txt</span></li>
+          <li>Agent keys (<span class="term">client.keys</span>) or API tokens</li>
+          <li>Screenshots showing your name, email or Windows device IDs</li>
+        </ul></div>
+      </div>
+
+      <div class="si-divider"><button class="si-toggle" data-target="si-publish" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-publish">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        <p class="si">ස්ක්‍රීන්ෂොට්, local_rules.xml, ATT&amp;CK සිතියම්ගත කිරීම් සහ ඔබ ඉගෙනගත් දේ ඔබේ වෙබ් අඩවියට ප්‍රකාශයට පත් කරන්න. මුරපද, wazuh-passwords.txt සහ agent යතුරු කිසිවිටෙක ප්‍රකාශයට පත් නොකරන්න.</p>
+      </div>
+    </section>
+
+    <!-- ================= 11. TROUBLE ================= -->
+    <section class="section" id="trouble">
+      <div class="kicker">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--yellow)">11</div><h2>Troubleshooting</h2></div>
+      </div>
+      <div class="table-wrap"><table class="ctable">
+        <thead><tr><th>Symptom</th><th>Likely cause</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td class="row-head">apt update shows 404 / "no longer has a Release file"</td><td>The Ubuntu release is end of life (for example 25.04)</td><td>Use Ubuntu Server 24.04 LTS (or 26.04 LTS), not an expired release</td></tr>
+          <tr><td class="row-head"><span class="term">df -h /</span> shows only about 15 GB on a 30 GB disk</td><td>Installer used LVM and left the volume half-sized</td><td>Run <span class="term">sudo lvextend -r -l +100%FREE /dev/mapper/ubuntu--vg-ubuntu--lv</span> to grow the volume and filesystem</td></tr>
+          <tr><td class="row-head">"Wazuh dashboard server is not ready yet"</td><td>Indexer still starting, or too little RAM</td><td>Wait 2–3 minutes, check <span class="term">free -h</span>, restart <span class="term">wazuh-indexer</span> then <span class="term">wazuh-dashboard</span>, cap the JVM heap at 1g</td></tr>
+          <tr><td class="row-head">Browser cannot open https://127.0.0.1:8443</td><td>Port-forward missing or wrong, VM off</td><td>Check the 8443 → 443 rule on Adapter 1 (Host IP 127.0.0.1); use https, not http</td></tr>
+          <tr><td class="row-head">Agent never shows Active</td><td>Wrong internal network name, wrong IP, version mismatch</td><td>Confirm both adapters use <span class="term">SOC-Lab-Net</span>; re-run Test-NetConnection on 1514 and 1515; reinstall using the wizard command</td></tr>
+          <tr><td class="row-head">No Windows events in the dashboard</td><td>Time range too narrow, agent just started</td><td>Wait a minute, widen the time range, check <span class="term">ossec.log</span> on the agent</td></tr>
+          <tr><td class="row-head">No FIM alerts</td><td>Folder created after the agent started, XML typo</td><td>Check the path in <span class="term">ossec.conf</span>, restart the <span class="term">WazuhSvc</span> service</td></tr>
+          <tr><td class="row-head">Custom rule never fires</td><td>Parent rule ID differs from your alert</td><td>Read the real <span class="term">rule.id</span> in the dashboard, update <span class="term">if_sid</span>, run <span class="term">wazuh-analysisd -t</span>, restart the manager</td></tr>
+          <tr><td class="row-head">Laptop slow while both VMs run</td><td>RAM pressure</td><td>Close browsers and other apps, keep Kali and pfSense off, cap the indexer heap</td></tr>
+        </tbody>
+      </table></div>
+
+      <div class="si-divider"><button class="si-toggle" data-target="si-trouble" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-trouble">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        <p class="si">ගැටලුවක් ඇති වුවහොත් ඉහත වගුව බලන්න. බොහෝ අවස්ථාවල හේතුව වන්නේ ජාල නාමය වැරදීම, RAM ප්‍රමාණවත් නොවීම, නැතහොත් සහාය නොදක්වන Ubuntu අනුවාදයක් භාවිතයයි. ඕනෑම විශාල වෙනසක් කිරීමට පෙර snapshot එකක් ගන්න.</p>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         APPENDED SECTIONS — beyond the lab steps
+         ============================================================ -->
+
+    <section class="section collapsible" id="exam">
+      <div class="kicker" data-toggle="exam">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--yellow)">12</div><h2>Interview &amp; Cert Takeaways</h2></div>
+        <button class="collapse-toggle" id="exam-toggle" aria-expanded="false" aria-controls="exam-body" aria-label="Expand section"><span class="chevron">▾</span></button>
+      </div>
+      <div class="collapse-body" id="exam-body">
+      <p class="lede">Facts to be able to explain out loud after this lab. They also line up with the SIEM and log-analysis topics in entry-level security certifications.</p>
+      <ul class="exam-list">
+        <li><span class="chk"></span><span>Wazuh has three <b>central components</b>: the <b>manager</b> (analyses events with rules), the <b>indexer</b> (stores and searches alerts) and the <b>dashboard</b> (web UI). <b>Agents</b> run on endpoints. Filebeat ships alerts from the manager to the indexer.</span></li>
+        <li><span class="chk"></span><span>Agent traffic uses <b>1514</b>, enrollment uses <b>1515</b>, the API uses <b>55000</b>, and the dashboard uses <b>443</b>.</span></li>
+        <li><span class="chk"></span><span>Custom rules live in <b>local_rules.xml</b> with IDs from <b>100000</b>; default rules are never edited.</span></li>
+        <li><span class="chk"></span><span>Rule <b>levels</b> run 0–15. Level 0 produces no alert; higher means more severe.</span></li>
+        <li><span class="chk"></span><span>Key Windows events: <b>4624/4625</b> logon success/failure, <b>4720</b> user created, <b>4732</b> member added to a local group, <b>1102</b> audit log cleared.</span></li>
+        <li><span class="chk"></span><span>Failed-logon sub-status: <b>0xC0000064</b> = unknown user, <b>0xC000006A</b> = wrong password.</span></li>
+        <li><span class="chk"></span><span><b>FIM (syscheck)</b> detects added, modified and deleted files; <b>realtime</b> sees changes immediately, <b>whodata</b> also records who made them.</span></li>
+        <li><span class="chk"></span><span>Detection engineering loop: <b>generate event → find parent rule → write rule → test → tune</b>.</span></li>
+      </ul>
+      </div>
+    </section>
+
+    <section class="section collapsible" id="soc">
+      <div class="kicker" data-toggle="soc">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--red)">13</div><h2>SOC Analyst — Real-World Relevance</h2></div>
+        <button class="collapse-toggle" id="soc-toggle" aria-expanded="false" aria-controls="soc-body" aria-label="Expand section"><span class="chevron">▾</span></button>
+      </div>
+      <div class="collapse-body" id="soc-body">
+      <p class="lede">This lab is the daily SOC loop in miniature: alerts arrive, you investigate, and sometimes you improve the rule behind the alert.</p>
+      <div class="role-card"><div class="role-title"><span class="ico" style="background:#EA4335">T1</span>Tier 1 triage</div><p>Reading a burst of 4625 events and deciding whether it is a user typo or password guessing — checking the sub-status, the target account, and how many attempts in what time window.</p></div>
+      <div class="role-card"><div class="role-title"><span class="ico" style="background:#F09300">DE</span>Detection engineering</div><p>Writing, testing and tuning rules like 100101–100104, then documenting false positives. This is exactly what the SentinelOps project showcases.</p></div>
+      <div class="role-card"><div class="role-title"><span class="ico" style="background:#4285F4">TH</span>Threat hunting</div><p>Searching indexed events for patterns no rule flagged yet, such as new local accounts created outside business hours.</p></div>
+      <div class="callout soc">SOC takeaway: a log-cleared event (1102) or a surprise Administrators change is a classic post-compromise signal — practise reacting to those within minutes, not days.</div>
+      </div>
+    </section>
+
+    <section class="section collapsible" id="cloud">
+      <div class="kicker" data-toggle="cloud">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--purple)">14</div><h2>Cloud Security Engineer — Real-World Relevance</h2></div>
+        <button class="collapse-toggle" id="cloud-toggle" aria-expanded="false" aria-controls="cloud-body" aria-label="Expand section"><span class="chevron">▾</span></button>
+      </div>
+      <div class="collapse-body" id="cloud-body">
+      <p class="lede">Cloud workloads still run operating systems that need monitoring, and the same ideas apply to cloud logs.</p>
+      <div class="role-card"><div class="role-title"><span class="ico" style="background:#7B61FF">☁</span>Same agent pattern in the cloud</div><p>A Windows or Linux instance in a cloud account gets the same agent-to-manager model. Network rules (security groups) decide whether agents can reach ports 1514 and 1515.</p></div>
+      <div class="role-card"><div class="role-title"><span class="ico" style="background:#34A853">CT</span>Link to TrailSIEM</div><p>Wazuh also has an AWS integration that can ingest CloudTrail logs, which is a useful point of comparison when you build the TrailSIEM (DETECT) project.</p></div>
+      <div class="role-card"><div class="role-title"><span class="ico" style="background:#4285F4">HD</span>Hardening your own SIEM</div><p>Restrict who can reach the dashboard and the API, protect the admin password, and keep the components on matching versions — the SIEM is itself a high-value target.</p></div>
+      <div class="callout cloud">Cloud takeaway: detection logic (what you alert on, at what severity, mapped to which technique) transfers directly from endpoint logs to CloudTrail and VPC flow logs.</div>
+      </div>
+    </section>
+
+    <section class="section collapsible" id="glossary">
+      <div class="kicker" data-toggle="glossary">
+        <div class="kicker-left"><div class="num-badge" style="background:#5f6368">15</div><h2>Glossary — Acronyms &amp; Meanings</h2></div>
+        <button class="collapse-toggle" id="glossary-toggle" aria-expanded="false" aria-controls="glossary-body" aria-label="Expand section"><span class="chevron">▾</span></button>
+      </div>
+      <div class="collapse-body" id="glossary-body">
+      <div class="table-wrap">
+      <table class="gtable">
+        <thead><tr><th>Acronym</th><th>Full term</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td class="acr">SIEM</td><td class="term-full">Security Information and Event Management</td><td>Collects and correlates logs from many sources and raises alerts.</td></tr>
+          <tr><td class="acr">XDR</td><td class="term-full">Extended Detection and Response</td><td>Detection and response across endpoints, network and cloud; Wazuh offers SIEM and XDR capabilities.</td></tr>
+          <tr><td class="acr">FIM</td><td class="term-full">File Integrity Monitoring</td><td>Alerts when watched files are added, changed or deleted. Called syscheck in Wazuh.</td></tr>
+          <tr><td class="acr">HIDS</td><td class="term-full">Host-based Intrusion Detection System</td><td>Watches activity on an individual computer, like the Wazuh agent does.</td></tr>
+          <tr><td class="acr">ATT&amp;CK</td><td class="term-full">MITRE ATT&amp;CK</td><td>Public catalogue of attacker tactics and techniques, used to label detections.</td></tr>
+          <tr><td class="acr">TTP</td><td class="term-full">Tactics, Techniques and Procedures</td><td>How an attacker operates, at three levels of detail.</td></tr>
+          <tr><td class="acr">CSF</td><td class="term-full">NIST Cybersecurity Framework</td><td>Framework of security functions; this lab maps to DETECT.</td></tr>
+          <tr><td class="acr">IoC</td><td class="term-full">Indicator of Compromise</td><td>Evidence that a system may have been breached, such as a log-cleared event.</td></tr>
+          <tr><td class="acr">NAT</td><td class="term-full">Network Address Translation</td><td>VirtualBox mode that gives a VM internet access through the host.</td></tr>
+          <tr><td class="acr">—</td><td class="term-full">Internal network</td><td>VirtualBox mode where VMs talk only to each other (SOC-Lab-Net).</td></tr>
+          <tr><td class="acr">LVM</td><td class="term-full">Logical Volume Manager</td><td>Flexible Linux disk layout; the default installer layout may not use the whole disk.</td></tr>
+          <tr><td class="acr">MSI</td><td class="term-full">Microsoft Installer package</td><td>Windows installer format used for the Wazuh agent.</td></tr>
+        </tbody>
+      </table>
+      </div>
+      </div>
+    </section>
+
+    <section class="section collapsible" id="comparison">
+      <div class="kicker" data-toggle="comparison">
+        <div class="kicker-left"><div class="num-badge" style="background:#5f6368">16</div><h2>Comparison Tables</h2></div>
+        <button class="collapse-toggle" id="comparison-toggle" aria-expanded="false" aria-controls="comparison-body" aria-label="Expand section"><span class="chevron">▾</span></button>
+      </div>
+      <div class="collapse-body" id="comparison-body">
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--blue)"></span>Wazuh components</div>
+      <div class="table-wrap">
+        <table class="ctable">
+          <thead><tr><th>Component</th><th>Role</th><th>Runs on</th></tr></thead>
+          <tbody>
+            <tr><td class="row-head">Wazuh manager</td><td>Receives events, decodes them, applies rules, creates alerts</td><td>Wazuh-Server</td></tr>
+            <tr><td class="row-head">Wazuh indexer</td><td>Stores and searches alerts</td><td>Wazuh-Server</td></tr>
+            <tr><td class="row-head">Wazuh dashboard</td><td>Web UI for searching, FIM and ATT&amp;CK views</td><td>Wazuh-Server</td></tr>
+            <tr><td class="row-head">Wazuh agent</td><td>Collects logs and file changes on an endpoint</td><td>Win-Victim</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--yellow)"></span>Windows events used in this lab</div>
+      <div class="table-wrap">
+        <table class="ctable">
+          <thead><tr><th>Event ID</th><th>Meaning</th><th>Why a SOC cares</th></tr></thead>
+          <tbody>
+            <tr><td class="row-head">4624</td><td>Successful logon</td><td>Baseline; suspicious when odd account, time or source</td></tr>
+            <tr><td class="row-head">4625</td><td>Failed logon</td><td>Password guessing or user typos</td></tr>
+            <tr><td class="row-head">4720</td><td>User account created</td><td>Possible persistence</td></tr>
+            <tr><td class="row-head">4732</td><td>Member added to a local group</td><td>Possible privilege escalation</td></tr>
+            <tr><td class="row-head">1102</td><td>Audit log cleared</td><td>Possible attempt to hide activity</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="subhead"><span class="sub-dot" style="background:var(--green)"></span>FIM monitoring modes</div>
+      <div class="table-wrap">
+        <table class="ctable">
+          <thead><tr><th>Mode</th><th>How it works</th><th>Pros</th><th>Limits</th></tr></thead>
+          <tbody>
+            <tr><td class="row-head">Scheduled</td><td>Periodic scan comparing file hashes</td><td>Low overhead</td><td>Changes found only at the next scan</td></tr>
+            <tr><td class="row-head">Realtime</td><td>Watches the folder continuously</td><td>Immediate alerts</td><td>Does not say who made the change</td></tr>
+            <tr><td class="row-head">Whodata</td><td>Uses the OS audit system</td><td>Adds user and process info</td><td>Needs audit setup; more overhead</td></tr>
+          </tbody>
+        </table>
+      </div>
+      </div>
+    </section>
+
+    <!-- ===== SINHALA VOCABULARY ===== -->
+    <section class="section collapsible" id="sinhala-vocab" style="scroll-margin-top:84px;">
+      <div class="kicker" data-toggle="sinhala-vocab">
+        <div class="kicker-left">
+          <div class="num-badge" style="background:linear-gradient(135deg,#34A853,#1a73e8)">17</div>
+          <h2>🇱🇰 Sinhala Vocabulary — පාඩමෙහි දුෂ්කර වචන</h2>
+        </div>
+        <button class="collapse-toggle" id="sinhala-vocab-toggle" aria-expanded="false" aria-controls="sinhala-vocab-body" aria-label="Expand section"><span class="chevron">▾</span></button>
+      </div>
+      <div class="collapse-body" id="sinhala-vocab-body">
+      <p class="lede" style="margin-bottom:22px;">Key English words from this lab, with Sinhala meanings and example sentences.</p>
+      <div class="vocab-grid">
+
+        <div class="vocab-card">
+          <div class="vocab-header"><span class="vocab-word">SIEM</span><span class="vocab-pos">noun</span></div>
+          <div class="vocab-body">
+            <div class="vocab-meanings">
+              <div class="vocab-en"><span class="vocab-lang-label">🇬🇧 English</span><p>A system that gathers logs from many devices in one place, analyses them, and raises alerts about suspicious activity.</p></div>
+              <div class="vocab-si"><span class="vocab-lang-label">🇱🇰 සිංහල</span><p>විවිධ උපාංගවලින් ලොග් (logs) එක තැනකට එකතු කර, විශ්ලේෂණය කර, සැක සහිත ක්‍රියාකාරකම් ගැන අනතුරු ඇඟවීම් ලබා දෙන පද්ධතිය</p></div>
+            </div>
+            <div class="vocab-sentences-head">Sample Sentences</div>
+            <ul class="vocab-sentences">
+              <li><span class="vocab-tag tag-cyber">Cyber</span><span>The analyst opened the <span class="vocab-hl">SIEM</span> to check why a hundred logon failures appeared.</span></li>
+              <li><span class="vocab-tag tag-sw">Software</span><span>Wazuh is a free <span class="vocab-hl">SIEM</span> you can run in a virtual machine.</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="vocab-card">
+          <div class="vocab-header"><span class="vocab-word">integrity</span><span class="vocab-pos">noun</span></div>
+          <div class="vocab-body">
+            <div class="vocab-meanings">
+              <div class="vocab-en"><span class="vocab-lang-label">🇬🇧 English</span><p>The state of being complete and unchanged; in security, data that has not been altered without permission.</p></div>
+              <div class="vocab-si"><span class="vocab-lang-label">🇱🇰 සිංහල</span><p>අඛණ්ඩතාව — දත්ත අනවසරයෙන් වෙනස් නොවී, සම්පූර්ණව පැවතීම</p></div>
+            </div>
+            <div class="vocab-sentences-head">Sample Sentences</div>
+            <ul class="vocab-sentences">
+              <li><span class="vocab-tag tag-cyber">Cyber</span><span>File <span class="vocab-hl">integrity</span> monitoring warns you when an important file changes.</span></li>
+              <li><span class="vocab-tag tag-daily">Daily</span><span>The judge was respected for his honesty and <span class="vocab-hl">integrity</span>.</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="vocab-card">
+          <div class="vocab-header"><span class="vocab-word">agent</span><span class="vocab-pos">noun</span></div>
+          <div class="vocab-body">
+            <div class="vocab-meanings">
+              <div class="vocab-en"><span class="vocab-lang-label">🇬🇧 English</span><p>A small program installed on a computer that collects data and sends it to a central server.</p></div>
+              <div class="vocab-si"><span class="vocab-lang-label">🇱🇰 සිංහල</span><p>පරිගණකයක ස්ථාපනය කර, දත්ත එකතු කර මධ්‍යම සේවාදායකයට යවන කුඩා මෘදුකාංගය</p></div>
+            </div>
+            <div class="vocab-sentences-head">Sample Sentences</div>
+            <ul class="vocab-sentences">
+              <li><span class="vocab-tag tag-sw">Software</span><span>The Wazuh <span class="vocab-hl">agent</span> sends Windows event logs to the manager.</span></li>
+              <li><span class="vocab-tag tag-net">Network</span><span>The <span class="vocab-hl">agent</span> connects to the server on port 1514.</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="vocab-card">
+          <div class="vocab-header"><span class="vocab-word">detection rule</span><span class="vocab-pos">noun phrase</span></div>
+          <div class="vocab-body">
+            <div class="vocab-meanings">
+              <div class="vocab-en"><span class="vocab-lang-label">🇬🇧 English</span><p>A condition used to decide whether a log entry is suspicious and should create an alert.</p></div>
+              <div class="vocab-si"><span class="vocab-lang-label">🇱🇰 සිංහල</span><p>ලොග් සටහනක් සැක සහිතද සහ අනතුරු ඇඟවීමක් ඇති කළ යුතුද යන්න තීරණය කරන කොන්දේසිය</p></div>
+            </div>
+            <div class="vocab-sentences-head">Sample Sentences</div>
+            <ul class="vocab-sentences">
+              <li><span class="vocab-tag tag-cyber">Cyber</span><span>She wrote a <span class="vocab-hl">detection rule</span> for five failed logons in two minutes.</span></li>
+              <li><span class="vocab-tag tag-sw">Software</span><span>Custom <span class="vocab-hl">detection rules</span> go in <i>local_rules.xml</i>.</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="vocab-card">
+          <div class="vocab-header"><span class="vocab-word">false positive</span><span class="vocab-pos">noun phrase</span></div>
+          <div class="vocab-body">
+            <div class="vocab-meanings">
+              <div class="vocab-en"><span class="vocab-lang-label">🇬🇧 English</span><p>An alert triggered by harmless activity that was wrongly judged to be an attack.</p></div>
+              <div class="vocab-si"><span class="vocab-lang-label">🇱🇰 සිංහල</span><p>හානිකර නොවන ක්‍රියාවක් අනතුරක් ලෙස වැරදියට හඳුනාගෙන ඇති කළ අනතුරු ඇඟවීම</p></div>
+            </div>
+            <div class="vocab-sentences-head">Sample Sentences</div>
+            <ul class="vocab-sentences">
+              <li><span class="vocab-tag tag-cyber">Cyber</span><span>An administrator adding a user can be a <span class="vocab-hl">false positive</span> for the group-change rule.</span></li>
+              <li><span class="vocab-tag tag-daily">Daily</span><span>The smoke alarm went off because of toast — a <span class="vocab-hl">false positive</span>.</span></li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+      </div>
+    </section>
+
+    <footer>
+      Personal lab notes — Wazuh SIEM + Windows Detections<br>Lab 01 · SIEM &amp; Detection Engineering
+      <br><a class="back-top" href="#toc">Back to top ↑</a>
+    </footer>
+
+  </main>
+</div>
+
+<div class="bottom-nav">
+  <a class="path-btn prev" href="lab-00-environment-overview.html">
+    <span class="p-arrow">←</span>
+    <span class="p-text"><span class="p-kicker">Before you start · 00</span><span class="p-title">Lab Environment Overview</span></span>
+  </a>
+  <a class="path-btn index" href="labs-index.html">
+    <span class="p-text"><span class="p-kicker">All labs</span><span class="p-title">🏠 Labs Index</span></span>
+  </a>
+  <a class="path-btn next" href="lab-02-pfsense-suricata-log-forwarding.html">
+    <span class="p-text"><span class="p-kicker">Next · 02</span><span class="p-title">pfSense + Suricata + Log Forwarding</span></span>
+    <span class="p-arrow">→</span>
+  </a>
+</div>
+
+
+<script>
+  const sections = document.querySelectorAll('.section[id]');
+  const links = document.querySelectorAll('nav.toc a[href^="#"]');
+  const map = {};
+  links.forEach(l => map[l.getAttribute('href').slice(1)] = l);
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      const id = entry.target.getAttribute('id');
+      if(entry.isIntersecting){
+        links.forEach(l => l.classList.remove('active'));
+        if(map[id]) map[id].classList.add('active');
+      }
+    });
+  }, { rootMargin: '-15% 0px -70% 0px', threshold: 0 });
+
+  sections.forEach(s => observer.observe(s));
+
+  // ===== Bottom-of-page fallback — last section is short so the observer never fires for it =====
+  window.addEventListener('scroll', () => {
+    const scrollBottom = window.scrollY + window.innerHeight;
+    const pageHeight = document.documentElement.scrollHeight;
+    if(scrollBottom >= pageHeight - 60){
+      const lastLink = links[links.length - 1];
+      if(lastLink && !lastLink.classList.contains('active')){
+        links.forEach(l => l.classList.remove('active'));
+        lastLink.classList.add('active');
+      }
+    }
+  }, { passive: true });
+
+  const toc = document.getElementById('toc');
+  const menuBtn = document.getElementById('menuBtn');
+  const drawerClose = document.getElementById('drawerClose');
+  const backdrop = document.getElementById('tocBackdrop');
+
+  function openDrawer(){
+    toc.classList.add('drawer-open');
+    backdrop.classList.add('show');
+    menuBtn.setAttribute('aria-expanded','true');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeDrawer(){
+    toc.classList.remove('drawer-open');
+    backdrop.classList.remove('show');
+    menuBtn.setAttribute('aria-expanded','false');
+    document.body.style.overflow = '';
+  }
+
+  menuBtn.addEventListener('click', () => {
+    toc.classList.contains('drawer-open') ? closeDrawer() : openDrawer();
+  });
+  drawerClose.addEventListener('click', closeDrawer);
+  backdrop.addEventListener('click', closeDrawer);
+  links.forEach(l => l.addEventListener('click', closeDrawer));
+  window.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeDrawer(); });
+
+  window.addEventListener('resize', () => {
+    if(window.innerWidth > 900) closeDrawer();
+  });
+
+  document.querySelectorAll('.si-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const panel = document.getElementById(btn.getAttribute('data-target'));
+      if(!panel) return;
+      const isOpen = panel.classList.toggle('open');
+      btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+  });
+
+  // ===== Collapse / expand accordion (exam, SOC, Cloud, glossary, comparison, vocab) =====
+  (function(){
+    const GROUP_IDS = ['exam', 'soc', 'cloud', 'glossary', 'comparison', 'sinhala-vocab'];
+    const items = GROUP_IDS.map(id => ({
+      id,
+      section: document.getElementById(id),
+      body: document.getElementById(`${id}-body`),
+      toggle: document.getElementById(`${id}-toggle`),
+    })).filter(item => item.section && item.body && item.toggle);
+
+    function openItem(item, animate){
+      item.body.classList.add('open');
+      item.toggle.setAttribute('aria-expanded', 'true');
+      if(animate === false){
+        item.body.style.maxHeight = 'none';
+        return;
+      }
+      item.body.style.maxHeight = item.body.scrollHeight + 'px';
+      const onEnd = (e) => {
+        if(e.propertyName !== 'max-height') return;
+        item.body.style.maxHeight = 'none';
+        item.body.removeEventListener('transitionend', onEnd);
+      };
+      item.body.addEventListener('transitionend', onEnd);
+    }
+
+    function closeItem(item){
+      if(!item.body.classList.contains('open')) return;
+      const current = item.body.scrollHeight;
+      item.body.style.maxHeight = current + 'px';
+      // force reflow so the browser registers the numeric max-height before collapsing to 0
+      // eslint-disable-next-line no-unused-expressions
+      item.body.offsetHeight;
+      requestAnimationFrame(() => {
+        item.body.style.maxHeight = '0px';
+      });
+      item.body.classList.remove('open');
+      item.toggle.setAttribute('aria-expanded', 'false');
+    }
+
+    function toggleItem(id){
+      const clicked = items.find(i => i.id === id);
+      if(!clicked) return;
+      const isOpen = clicked.body.classList.contains('open');
+      items.forEach(i => { if(i !== clicked) closeItem(i); });
+      if(isOpen){
+        closeItem(clicked);
+      } else {
+        openItem(clicked, true);
+      }
+    }
+
+    items.forEach(item => {
+      item.toggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleItem(item.id);
+      });
+      item.section.querySelector('.kicker').addEventListener('click', () => toggleItem(item.id));
+    });
+
+    // Expose so the search engine (and TOC deep-links) can force a section open
+    window.__openAccordionSection = function(id){
+      const item = items.find(i => i.id === id);
+      if(!item) return;
+      if(!item.body.classList.contains('open')){
+        items.forEach(i => { if(i !== item) closeItem(i); });
+        openItem(item, true);
+      }
+    };
+
+    // Deep-link support: if the page loads with #exam / #glossary / etc. in the URL,
+    // open that section and scroll to it.
+    if(location.hash){
+      const targetId = location.hash.slice(1);
+      if(GROUP_IDS.includes(targetId)){
+        window.__openAccordionSection(targetId);
+        requestAnimationFrame(() => {
+          document.getElementById(targetId).scrollIntoView({ block:'start' });
+        });
+      }
+    }
+
+    // TOC links to these sections should open them (and scroll) instead of
+    // just jumping to a collapsed, empty-looking header.
+    document.querySelectorAll('nav.toc a[href^="#"]').forEach(link => {
+      const id = link.getAttribute('href').slice(1);
+      if(!GROUP_IDS.includes(id)) return;
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.__openAccordionSection(id);
+        history.pushState(null, '', '#' + id);
+        requestAnimationFrame(() => {
+          document.getElementById(id).scrollIntoView({ behavior:'smooth', block:'start' });
+        });
+      });
+    });
+  })();
+
+  // ===== In-page "find" search (shared engine — drives both the sidebar/mobile-menu box and the hero box) =====
+  (function(){
+    const mainEl = document.querySelector('main');
+    let matches = [];
+    let activeIndex = -1;
+    const uiSets = [];
+
+    function clearHighlights(){
+      mainEl.querySelectorAll('mark.search-hit').forEach(mark => {
+        const parent = mark.parentNode;
+        parent.replaceChild(document.createTextNode(mark.textContent), mark);
+        parent.normalize();
+      });
+      matches = [];
+      activeIndex = -1;
+    }
+
+    function walkAndHighlight(query){
+      const lowerQuery = query.toLowerCase();
+      const walker = document.createTreeWalker(mainEl, NodeFilter.SHOW_TEXT, {
+        acceptNode(node){
+          if(!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+          const tag = node.parentElement ? node.parentElement.tagName : '';
+          if(tag === 'SCRIPT' || tag === 'STYLE') return NodeFilter.FILTER_REJECT;
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      });
+
+      const textNodes = [];
+      let n;
+      while((n = walker.nextNode())) textNodes.push(n);
+
+      textNodes.forEach(node => {
+        const text = node.nodeValue;
+        const lowerText = text.toLowerCase();
+        if(!lowerText.includes(lowerQuery)) return;
+
+        const frag = document.createDocumentFragment();
+        let lastIndex = 0;
+        let idx = lowerText.indexOf(lowerQuery);
+
+        while(idx !== -1){
+          if(idx > lastIndex){
+            frag.appendChild(document.createTextNode(text.slice(lastIndex, idx)));
+          }
+          const mark = document.createElement('mark');
+          mark.className = 'search-hit';
+          mark.textContent = text.slice(idx, idx + query.length);
+          frag.appendChild(mark);
+          matches.push(mark);
+          lastIndex = idx + query.length;
+          idx = lowerText.indexOf(lowerQuery, lastIndex);
+        }
+        if(lastIndex < text.length){
+          frag.appendChild(document.createTextNode(text.slice(lastIndex)));
+        }
+        node.parentNode.replaceChild(frag, node);
+      });
+    }
+
+    function revealMatch(mark){
+      const panel = mark.closest('.si-panel');
+      if(panel && !panel.classList.contains('open')){
+        panel.classList.add('open');
+        const toggleBtn = document.querySelector(`.si-toggle[data-target="${panel.id}"]`);
+        if(toggleBtn) toggleBtn.setAttribute('aria-expanded', 'true');
+      }
+
+      const collapseBody = mark.closest('.collapse-body');
+      if(collapseBody && !collapseBody.classList.contains('open') && window.__openAccordionSection){
+        const sectionId = collapseBody.closest('.section')?.id;
+        if(sectionId) window.__openAccordionSection(sectionId);
+      }
+    }
+
+    function updateAllUI(){
+      uiSets.forEach(ui => {
+        if(matches.length === 0){
+          ui.navBar.classList.remove('show');
+          ui.prevBtn.disabled = true;
+          ui.nextBtn.disabled = true;
+          ui.countLabel.textContent = '0 / 0';
+        } else {
+          ui.navBar.classList.add('show');
+          ui.prevBtn.disabled = false;
+          ui.nextBtn.disabled = false;
+          ui.countLabel.textContent = `${activeIndex + 1} / ${matches.length}`;
+        }
+      });
+    }
+
+    function syncValue(value){
+      uiSets.forEach(ui => {
+        if(ui.input.value !== value) ui.input.value = value;
+        ui.wrap.classList.toggle('has-query', value.trim().length > 0);
+      });
+    }
+
+    function goToMatch(index){
+      if(matches.length === 0) return;
+      if(activeIndex >= 0 && matches[activeIndex]) matches[activeIndex].classList.remove('active');
+      activeIndex = ((index % matches.length) + matches.length) % matches.length;
+      const mark = matches[activeIndex];
+      revealMatch(mark);
+      mark.classList.add('active');
+      mark.scrollIntoView({ behavior:'smooth', block:'center' });
+      updateAllUI();
+    }
+
+    function runSearch(rawQuery){
+      clearHighlights();
+      const query = rawQuery.trim();
+      syncValue(rawQuery);
+
+      if(query.length < 2){
+        updateAllUI();
+        return;
+      }
+
+      walkAndHighlight(query);
+
+      if(matches.length === 0){
+        updateAllUI();
+        return;
+      }
+
+      goToMatch(0);
+    }
+
+    function resetAll(){
+      syncValue('');
+      clearHighlights();
+      updateAllUI();
+    }
+
+    function bindUI(ui){
+      uiSets.push(ui);
+      let debounceTimer = null;
+
+      ui.input.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        const val = ui.input.value;
+        debounceTimer = setTimeout(() => runSearch(val), 200);
+      });
+
+      ui.input.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter'){
+          e.preventDefault();
+          if(matches.length > 0) goToMatch(activeIndex + (e.shiftKey ? -1 : 1));
+        }
+        if(e.key === 'Escape'){
+          resetAll();
+          ui.input.blur();
+        }
+      });
+
+      ui.prevBtn.addEventListener('click', () => goToMatch(activeIndex - 1));
+      ui.nextBtn.addEventListener('click', () => goToMatch(activeIndex + 1));
+      ui.clearBtn.addEventListener('click', () => {
+        resetAll();
+        ui.input.focus();
+      });
+    }
+
+    bindUI({
+      input: document.getElementById('pageSearchInput'),
+      clearBtn: document.getElementById('pageSearchClear'),
+      wrap: document.getElementById('pageSearchInput').closest('.toc-search'),
+      navBar: document.getElementById('searchNav'),
+      countLabel: document.getElementById('searchCount'),
+      prevBtn: document.getElementById('searchPrev'),
+      nextBtn: document.getElementById('searchNext'),
+    });
+
+    bindUI({
+      input: document.getElementById('heroFindInput'),
+      clearBtn: document.getElementById('heroFindClear'),
+      wrap: document.getElementById('heroFindWrap'),
+      navBar: document.getElementById('heroFindNav'),
+      countLabel: document.getElementById('heroSearchCount'),
+      prevBtn: document.getElementById('heroSearchPrev'),
+      nextBtn: document.getElementById('heroSearchNext'),
+    });
+
+    window.addEventListener('keydown', (e) => {
+      const focusedIsSearch = uiSets.some(ui => document.activeElement === ui.input);
+      if(e.key === '/' && !focusedIsSearch && !e.metaKey && !e.ctrlKey){
+        e.preventDefault();
+        document.getElementById('heroFindInput').focus();
+      }
+    });
+  })();
+
+  // ===== Global topic search (jump to any lab guide from this page's hero) =====
+  (function(){
+    const TOPICS = [
+    { num:'00', title:'Lab Environment Overview', href:'lab-00-environment-overview.html' },
+    { num:'01', title:'Wazuh SIEM + Windows Detections', href:'lab-01-wazuh-siem-windows-detections.html' },
+    { num:'02', title:'pfSense + Suricata + Log Forwarding', href:'lab-02-pfsense-suricata-log-forwarding.html' },
+    { num:'03', title:'DVWA + WAF: SQL Injection Detection', href:'lab-03-dvwa-waf-sqli-detection.html' },
+    { num:'04', title:'Attack Simulation & Detection', href:'lab-04-attack-simulation-detection.html' },
+    { num:'05', title:'Phishing Email Investigation', href:'lab-05-phishing-email-investigation.html' },
+    { num:'06', title:'PCAP Investigation', href:'lab-06-pcap-investigation.html' }
+    ];
+    const CURRENT_HREF = 'lab-01-wazuh-siem-windows-detections.html';
+
+    const jumpInput = document.getElementById('topicJump');
+    const jumpWrap = document.getElementById('siteSearch');
+    const jumpClear = document.getElementById('jumpClear');
+    const dropdown = document.getElementById('jumpDropdown');
+
+    let results = [];
+    let hlIndex = -1;
+
+    function render(query){
+      const q = query.trim().toLowerCase();
+      if(q === ''){
+        dropdown.classList.remove('show');
+        dropdown.innerHTML = '';
+        results = [];
+        hlIndex = -1;
+        return;
+      }
+
+      results = TOPICS.filter(t => t.title.toLowerCase().includes(q)).slice(0, 8);
+      hlIndex = -1;
+
+      if(results.length === 0){
+        dropdown.innerHTML = '<div class="s-empty">No labs match your search</div>';
+      } else {
+        dropdown.innerHTML = results.map((t, i) => {
+          const current = t.href === CURRENT_HREF ? ' (this page)' : '';
+          return `<a class="s-item" href="${t.href}" data-idx="${i}"><span class="s-num">${t.num}</span><span>${t.title}${current}</span></a>`;
+        }).join('');
+      }
+      dropdown.classList.add('show');
+    }
+
+    function setHighlight(i){
+      const items = dropdown.querySelectorAll('.s-item');
+      items.forEach(el => el.classList.remove('hl'));
+      if(i >= 0 && items[i]){
+        items[i].classList.add('hl');
+        items[i].scrollIntoView({ block:'nearest' });
+      }
+      hlIndex = i;
+    }
+
+    jumpInput.addEventListener('input', () => {
+      jumpWrap.classList.toggle('has-query', jumpInput.value.trim().length > 0);
+      render(jumpInput.value);
+    });
+
+    jumpInput.addEventListener('keydown', (e) => {
+      if(e.key === 'ArrowDown'){
+        e.preventDefault();
+        if(results.length) setHighlight((hlIndex + 1) % results.length);
+      } else if(e.key === 'ArrowUp'){
+        e.preventDefault();
+        if(results.length) setHighlight((hlIndex - 1 + results.length) % results.length);
+      } else if(e.key === 'Enter'){
+        if(hlIndex >= 0 && results[hlIndex]){
+          window.location.href = results[hlIndex].href;
+        } else if(results.length > 0){
+          window.location.href = results[0].href;
+        }
+      } else if(e.key === 'Escape'){
+        jumpInput.value = '';
+        jumpWrap.classList.remove('has-query');
+        render('');
+        jumpInput.blur();
+      }
+    });
+
+    jumpClear.addEventListener('click', () => {
+      jumpInput.value = '';
+      jumpWrap.classList.remove('has-query');
+      render('');
+      jumpInput.focus();
+    });
+
+    document.addEventListener('click', (e) => {
+      if(!jumpWrap.contains(e.target)){
+        dropdown.classList.remove('show');
+      }
+    });
+  })();
+</script>
+
+<script>
+(function(){
+  const imgs = Array.from(document.querySelectorAll('.figure img'));
+  const overlay = document.createElement('div');
+  overlay.className = 'lb-overlay';
+  overlay.setAttribute('role','dialog'); overlay.setAttribute('aria-modal','true'); overlay.setAttribute('aria-label','Enlarged image');
+  overlay.innerHTML = '<button class="lb-close" aria-label="Close image">&times;</button>' +
+    '<button class="lb-nav lb-prev" aria-label="Previous image">&#8249;</button>' +
+    '<button class="lb-nav lb-next" aria-label="Next image">&#8250;</button>' +
+    '<img alt=""><div class="lb-caption"></div><div class="lb-count"></div>';
+  document.body.appendChild(overlay);
+  const bigImg = overlay.querySelector('img');
+  const cap = overlay.querySelector('.lb-caption');
+  const count = overlay.querySelector('.lb-count');
+  let idx = 0;
+  function show(i){
+    idx = (i + imgs.length) % imgs.length;
+    const img = imgs[idx];
+    bigImg.src = img.currentSrc || img.src;
+    bigImg.alt = img.alt || '';
+    const fc = img.closest('.figure') && img.closest('.figure').querySelector('figcaption');
+    cap.textContent = fc ? fc.textContent : (img.alt || '');
+    count.textContent = (idx + 1) + ' / ' + imgs.length;
+  }
+  function open(i){
+    show(i);
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function close(){
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  const isOpen = () => overlay.classList.contains('open');
+  imgs.forEach((img, i) => img.addEventListener('click', () => open(i)));
+  overlay.addEventListener('click', close);
+  overlay.querySelector('.lb-prev').addEventListener('click', e => { e.stopPropagation(); show(idx - 1); });
+  overlay.querySelector('.lb-next').addEventListener('click', e => { e.stopPropagation(); show(idx + 1); });
+  overlay.querySelector('.lb-close').addEventListener('click', e => { e.stopPropagation(); close(); });
+  window.addEventListener('keydown', e => {
+    if(!isOpen()) return;
+    if(e.key === 'Escape') close();
+    else if(e.key === 'ArrowLeft') show(idx - 1);
+    else if(e.key === 'ArrowRight') show(idx + 1);
+  });
+  // Swipe left / right on touch screens
+  let sx = null, sy = null;
+  overlay.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+  overlay.addEventListener('touchend', e => {
+    if(sx === null) return;
+    const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+    sx = sy = null;
+    if(Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5){
+      e.preventDefault();
+      show(dx < 0 ? idx + 1 : idx - 1);
+      overlay._swiped = true; setTimeout(() => overlay._swiped = false, 400);
+    }
+  });
+  // ignore the synthetic click that follows a swipe so it doesn't close the viewer
+  overlay.addEventListener('click', e => { if(overlay._swiped){ e.stopImmediatePropagation(); } }, true);
+})();
+</script>
+
+<script>// ===== Copy buttons for code blocks =====
+(function(){
+  document.querySelectorAll('pre.code').forEach(pre => {
+    const btn = document.createElement('button');
+    btn.type = 'button'; btn.className = 'copy-btn'; btn.textContent = 'Copy';
+    btn.setAttribute('aria-label', 'Copy code');
+    btn.addEventListener('click', () => {
+      const text = pre.querySelector('code').textContent;
+      const done = () => { btn.textContent = 'Copied'; btn.classList.add('done'); setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('done'); }, 1500); };
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(done).catch(() => {});
+      } else {
+        const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+        try{ document.execCommand('copy'); done(); }catch(e){} document.body.removeChild(ta);
+      }
+    });
+    pre.appendChild(btn);
+  });
+})();
+</script>
+
+</body>
+</html>
